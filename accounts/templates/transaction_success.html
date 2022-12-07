@@ -1,0 +1,25 @@
+{% extends 'home/base.html' %}
+{% block content %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+<div class="container-fluid">
+    <div class="row no-gutter">
+        <div>
+            <ul>
+                <li>Transaction Owner : {{transaction.owner.first_name}} {{transaction.owner.last_name}}</li>
+                <li>Transaction Type  : {{transaction.txType}} </li>
+                <li>Expense Type      : {{transaction.exType}} </li>
+                <li>Transaction Amount: {{transaction.amount}} </li>
+                <li>Transaction Date  : {{transaction.date}}</li>
+                <li>Remarks           : {{transaction.remarks}}</li>
+            </ul>
+            <p>
+                <div>Please review and go back to edit if required</div>
+                <a href="{% url 'accounts:transactionUpd'  transaction.id %}" class="btn btn-secondary btn-md">Update Again</a>
+                <a href="{% url 'accounts:transactionList' 0 %}" class="btn btn-secondary btn-md">Back to Transactions</a>
+            </p>
+    </div>
+</div>
+{% include 'home/footer.html' %}
+{% endblock %}

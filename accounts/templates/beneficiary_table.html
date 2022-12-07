@@ -1,0 +1,61 @@
+{% extends 'home/base.html' %}
+{% block content %}
+{% load static %}
+{% load crispy_forms_tags %}
+<div class="container-fluid">
+    <div class="row text-center justify-content-center">
+      <div class="card mt-2 mb-2">
+        <div class="card-header">
+          Member List
+        </div>
+        <div class="card-body">
+          <div id="member" class="ag-theme-balham" data-url={% url 'accounts:beneficiaryAll' %} style="height: 1000px;"></div>
+          {% if user.is_staff %}
+          <a href="{% url 'accounts:beneficiaryAdd'%}" class="btn btn-secondary btn-md">Add Beneficiary</a>
+          {% endif %}
+        </div>
+      </div>  
+    </div>
+  <div>
+  
+  <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/@ag-grid-community/all-modules@26.0.0/dist/styles/ag-grid.css" />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/@ag-grid-community/all-modules@26.0.0/dist/styles/ag-theme-balham.css" />
+  
+  <script type="text/javascript">
+      // Function to demonstrate calling grid's API
+      function deselect(){
+          gridOptions.api.deselectAll()
+      };
+      function fetchData(dataUrl, gridOptions){
+        fetch(dataUrl)
+        .then(response => response.json())
+        .then(data => {
+            const colDefs = gridOptions.api.getColumnDefs();
+            colDefs.length=0;
+            const keys = Object.keys(data[0])
+            keys.forEach(key => colDefs.push({field : key}));
+            gridOptions.api.setColumnDefs(colDefs);
+            // load fetched data into grid
+            gridOptions.api.setRowData(data);
+        });
+      }
+      const gridOptions={
+              columnDefs :[],
+              defaultColDef : {sortable: true, filter: true},
+              rowSelection : 'multiple', // allow rows to be selected
+              animateRows : true, // have rows animate to new positions when sorted
+      };
+  
+      gridDiv = document.getElementById("member");
+      dataUrl= gridDiv.getAttribute('data-url')
+      new agGrid.Grid(gridDiv, gridOptions);
+      fetchData(dataUrl,gridOptions)
+  </script>
+  
+{% include 'home/footer.html' %}
+{% endblock %}

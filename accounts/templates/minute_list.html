@@ -1,0 +1,87 @@
+{% extends 'home/base.html' %}
+{% block content %}
+{% if userRole == 'NONE' %}
+<div class="container-fluid">
+    <div class="row text-center justify-content-center">
+            <div class="card mt-2 mb-2">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-sm-12">
+                        Unauthorized to view the content
+                    </div>
+                </div>
+            </div>
+            </div>
+    </div>
+</div>
+{% else %}
+<div class="container-fluid">
+    <div class="row text-center justify-content-center">
+        
+        {% if userRole == 'EDIT' %}
+        <p >Review Minutes and Update or Delete or
+         <a href="{% url 'accounts:minuteAdd' project.id %}" class="btn btn-secondary btn-md">Add Minute</a>
+         </p>
+        {% endif %}
+
+        {% for minute in minute_list %}
+        <div class="card mt-2 mb-2">
+            <div class="card-header">
+                <div class="row">
+                    <p align="justify">
+                        <strong>Minutes for : {{project.name}}</strong>
+                        <i>Meeting Date :{{minute.date}}</i>
+                    </p>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-9 col-lg-9" align="left">
+                        <div class="alert alert-info text-left justify-content-left">
+                            <strong>Attendees : </strong> {{minute.attendees|linebreaks}} 
+                        </div>
+                        <div class="alert alert-light text-left justify-content-left">
+                            <strong>Discussion : </strong> {{minute.discussion|linebreaks}}
+                        </div>
+                        <div class="alert alert-secondary text-left justify-content-left">
+                            <strong>Resolution : </strong> {{minute.resolution|linebreaks}}
+                        </div>
+                        <div class="alert alert-warning text-left justify-content-left">
+                            <strong>ToDo's : </strong> {{minute.todos|linebreaks}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-secondary">
+                {% if userRole == 'EDIT' %}
+                <p style="color:white">Review Minutes and Update or Delete
+                 <a href="{% url 'accounts:minuteUpd' minute.id %}" class="btn btn-secondary btn-md">Edit Minute</a>
+                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#deleteUserModal">
+                    Delete Minute
+                </button>
+                <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="exampleModalLabel">Confirm Removal!</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                         Please Confirm you want to remove the minutes. <br>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                          <a href="{% url 'accounts:minuteDel' minute.id %}" class="btn btn-danger btn-md">DELETE</a> <br><br>
+                      </div>
+                    </div>
+                </div>
+                 </p>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+ </div>
+{% endif %}
+{% include 'home/footer.html' %}
+{% endblock content %}

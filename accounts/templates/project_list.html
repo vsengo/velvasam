@@ -1,0 +1,106 @@
+{% extends 'home/base.html' %}
+{% block content %}
+<script type="text/javascript">
+    function confirmDeleteModal(id){
+        $('#delete_confirm_form').attr('action',"/accounts/projectDel"+id);
+        $('#deleteUserModal').modal('show');
+    };    
+</script>
+{% if userRole == 'NONE' %}
+<div class="container-fluid">
+    <div class="row text-center justify-content-center">
+            <div class="card mt-2 mb-2">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-sm-12">
+                        Unauthorized to view the content
+                    </div>
+                </div>
+            </div>
+            </div>
+    </div>
+</div>
+{% else %}
+<div class="container-fluid">
+    <div class="row text-center justify-content-center">
+            <div class="card mt-2 mb-2">
+            <div class="card-header">
+                <div class="row">
+                   <p >Review Projects and Update, Delete OR 
+                    <br>
+                    {% if userRole == 'EDIT' %}
+                    <div>
+                    <a href="{% url 'accounts:projectAdd'%}" class="btn btn-secondary btn-md">Add New Project</a>
+                    </div>
+                    {% endif %}
+                   </p>
+
+                </div>
+            </div>
+
+            <div class="card-body">
+                {% for project in project_list %}
+                <div class="row">
+                    <div class="col-md-9 col-lg-4" align="left">
+                        <div class="alert alert-danger text-left justify-content-left">
+                            <p>
+                                <strong>{{forloop.counter}}. {{project.name}}</strong>     
+                                <i>(Started On:{{project.startDate}} {{project.status}})</i>  
+                                <ul>
+                                    <li>Total Fund     :{{project.raisedFund|floatformat:"-3g"}}</li>
+                                    <li>Total Donated  :{{project.spentFund|floatformat:"-3g"}}</li>
+                                    <li>BALANCE        :{{project.balance|floatformat:"-3g"}}</li>
+                                </ul>
+                            </p>
+                        </div>
+
+                        <div class="alert alert-light text-left justify-content-left">
+                       
+                        </div>
+                    </div>
+                     <div class="col-md-9 col-lg-5" align="left">
+                        <div class="alert alert-info text-left justify-content-left">
+                            <strong>Objective :</strong> {{project.purpose|linebreaks}}
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-lg-3" align="right">
+                        <div class="alert alert-dark text-left justify-content-left">
+                            <a href="{% url 'accounts:transactionList' project.id %}" class="btn btn-secondary btn-md"> Transactions</a><br><br>
+                            {% if userRole == 'EDIT' %}
+                            <a href="{% url 'accounts:committeeList' project.id %}" class="btn btn-secondary btn-md"> Commmittee</a>
+                            <a href="{% url 'accounts:minuteList' project.id %}" class="btn btn-secondary btn-md">Update  Minutes</a><br><br>
+                            <a href="{% url 'accounts:projectUpd' project.id %}" class="btn btn-secondary btn-md">Update Project</a>
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" onclick="confirmDeleteModal('{{project.id}}')" id="deleteID">
+                                Close
+                            </button> <br><br> 
+                            {% endif %}    
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                {% endfor %}
+
+            </div>
+        </div>
+    </div>
+ </div>
+
+ <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+       <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" style="color:red">Confirm you want to Close the Project.</h5>
+                <form id="delete_confirm_form" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning mr-1" data-dismiss="modal">CLOSE</button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <p class="modal-title">Click outside this box to Cancel.</p>
+            </div>
+       </div> 
+    </div>
+</div>
+{% endif %}
+{% include 'home/footer.html' %}
+{% endblock content %}

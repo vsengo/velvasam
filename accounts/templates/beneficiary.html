@@ -1,0 +1,65 @@
+{% extends 'home/base.html' %}
+{% block content %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+<div class="container-fluid">
+    <div class="card mt-2 mb-2">
+        <div class="card-header">
+            <div class="row">
+                    <div class="col-sm-4">
+                        <p class="text-capitalize">
+                        <strong>Name   :</strong><i>{{beneficiary.name}} (ph:{{beneficiary.mobile}})</i><br>
+                        <strong>School :</strong> <i> {{beneficiary.school}}</i><br>
+                        <strong>Grade  :</strong> <i>{{beneficiary.grade}} </i><br>
+                        <strong>Amount :</strong><i>{{beneficiary.amount|floatformat:"-3g"}} </i><br>
+                        <strong>Start  :</strong><i>{{beneficiary.startDate}} <strong>End Date :</strong>{{beneficiary.endDate}}</i>
+                        </p>
+                    </div>
+                    <div class="col-sm-4">
+                        <p class="text-capitalize">
+                        <strong>Category :</strong><i>{{beneficiary.category}} </i><br>
+                        <strong>Parent/Guardian :</strong><i>{{beneficiary.parent}} (ph:{{beneficiary.parentMobile}})</i><br>
+                        <strong>Principal :</strong><i> {{beneficiary.principal}} (ph:{{beneficiary.principalMobile}})</i><br>
+                        </p>
+                    </div>
+                    <div class="col-sm-4">
+                        <p class="text-capitalize">
+                        <strong>Account :</strong><i>{{beneficiary.account}}</i><br>
+                        <strong>Bank    :</strong><i>{{beneficiary.bank}}</i><br>
+                        <strong>Branch  :</strong><i> {{beneficiary.branch}}</i><br>
+                        <strong>Account Holder :</strong><i>{{beneficiary.accountHolder}} (ph:{{beneficiary.holderMobile}})</i><br>
+                    </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Action</th>
+                        <th scope="col">Amount</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                   {% for tx in data_list %}
+                    <tr>
+                        <td>{{forloop.counter}}</td>
+                        <td>{{tx.date}}</td>
+                        <td>{{tx.exType}} </td>
+                        <td>{{tx.amount}} </td>
+                        <td>{{tx.confirmed}}</td>
+                        <td>{{tx.remarks}}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% include 'home/footer.html' %}
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends 'home/base.html' %}
+{% load static %}
+{% block content %}
+{% if userRole == 'NONE' %}
+<div class="container-fluid">
+    <div class="row text-center justify-content-center">
+            <div class="card mt-2 mb-2">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-sm-12">
+                        Unauthorized to view the content
+                    </div>
+                </div>
+            </div>
+            </div>
+    </div>
+</div>
+{% else %}
+<div class="container-fluid">
+  <div class="row text-center justify-content-center">
+    <div class="card mt-2 mb-2">
+      <div class="card-header">
+        <h5>Transactions</h5>
+        {% if userRole == 'EDIT' %}
+        <a href="{% url 'accounts:transactionAdd' %}" class="btn btn-secondary btn-md">Add Transaction</a>
+        <a href="{% url 'accounts:transactionList' 0 %}" class="btn btn-secondary btn-md">Edit Transactions</a>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        <div id="transaction" class="ag-theme-balham" data-url={% url 'accounts:getTransactions'  %} style="height: 1000px;"></div>
+      </div>
+    </div>  
+  </div>
+<div>
+{% endif %}
+<script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/@ag-grid-community/all-modules@26.0.0/dist/styles/ag-grid.css" />
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/@ag-grid-community/all-modules@26.0.0/dist/styles/ag-theme-balham.css" />
+
+<script type="text/javascript">
+    // Function to demonstrate calling grid's API
+    function deselect(){
+        gridOptions.api.deselectAll()
+    };
+    function fetchData(dataUrl, gridOptions){
+      fetch(dataUrl)
+      .then(response => response.json())
+      .then(data => {
+          const colDefs = gridOptions.api.getColumnDefs();
+          colDefs.length=0;
+          const keys = Object.keys(data[0])
+          keys.forEach(function(key){
+            if (key == 'expDate'){
+              colDefs.push({field : key,minWidth:80,maxWidth:120});
+            }else{
+              colDefs.push({field : key});
+            };
+          });
+          gridOptions.api.setColumnDefs(colDefs);
+          gridOptions.api.setRowData(data);
+      });
+    }
+    const gridOptions={
+            columnDefs :[],
+            defaultColDef : {sortable: true, filter: true, resizable:true, minWidth:60,maxWidth:90},
+            rowSelection : 'multiple', // allow rows to be selected
+            animateRows : true, // have rows animate to new positions when sorted
+    };
+
+    gridDiv = document.getElementById("transaction");
+    dataUrl= gridDiv.getAttribute('data-url')
+    new agGrid.Grid(gridDiv, gridOptions);
+    fetchData(dataUrl,gridOptions)
+</script>
+{% include 'home/footer.html' %}
+{% endblock %}

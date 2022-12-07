@@ -1,0 +1,12 @@
+{% extends 'home/base.html' %}
+{% block content %}
+<h4 align="center" style="color:red">
+    {{ title }}
+</h4>
+<div align="center" style="color:red">
+  {{ message }}
+    <br>
+   Please use Back button in browser to go back and re-retry!
+</div>
+{% include 'home/footer.html' %}
+{% endblock %}

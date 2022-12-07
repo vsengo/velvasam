@@ -1,0 +1,112 @@
+{% extends 'home/base.html' %}
+{% block content %}
+
+<script type="text/javascript">
+    function confirmDeleteModal(id){
+        $('#delete_confirm_form').attr('action',"/accounts/transactionDel"+id);
+        $('#deleteUserModal').modal('show');
+    };    
+</script>
+{% if userRole == 'NONE' %}
+<div class="container-fluid">
+    <div class="row text-center justify-content-center">
+            <div class="card mt-2 mb-2">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-sm-12">
+                        Unauthorized to view the content
+                    </div>
+                </div>
+            </div>
+            </div>
+    </div>
+</div>
+{% else %}
+<div class="container-fluid">
+    <div class="row text-center justify-content-center">
+            <div class="card mt-2 mb-2">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <strong>Transactions for {{project_name}}</strong><br>
+                        {% if userRole == 'EDIT' %}
+                        <a href="{% url 'accounts:transactionAdd' %}" class="btn btn-secondary btn-md">Add Transaction</a>
+                        {% endif %}
+                        </div>   
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th scope="col">#</th>
+                                    <th scope="col">Account</th>
+                                    <th scope="col">Project</th>
+                                    <th scope="col">Action</th>
+                                    <th scope="col">Expense</th>
+                                    <th scope="col">Amount</th>
+                                    <th scope="col">Date</th>
+                                    <th scope="col">Remarks</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Name</th>
+                                    {% if userRole == 'EDIT' %}
+                                    <th scope="col">Update </th>
+                                    <th scope="col">Delete </th>
+                                    {% endif %} 
+                                </tr>
+                            </thead>
+                            <tbody>
+                               {% for tx in transaction_list %}
+                                <tr>
+                                    <th scope=""row">{{forloop.counter}}</th>
+                                    <td>{{tx.bank.name}}</td>
+                                    <td>{{tx.project.name}}</td>
+                                    <td>{{tx.txType}} </td>
+                                    <td>{{tx.exType}} </td>
+                                    <td>{{tx.amount|floatformat:"-3g"}} </td>
+                                    <td>{{tx.date}}</td>
+                                    <td>{{tx.remarks}}</td>
+                                    <td>{{tx.confirmed}}</td>
+                                    <td>{{tx.owner.first_name}} {{tx.owner.last_name}}</td>
+                                    {% if userRole == 'EDIT' %}
+                                    <td><a href="{% url 'accounts:transactionUpd' tx.id %}" class="btn btn-danger btn-md">Edit</a></td>
+                                    <td>
+                                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" onclick="confirmDeleteModal('{{tx.id}}')" id="deleteID">
+                                            Delete
+                                        </button> 
+                                    </td>
+                                    {% endif %} 
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        </div>
+                </div>
+                <hr>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+           <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" style="color:red">Confirm you want to Delete the record.</h5>
+                    <form id="delete_confirm_form" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-warning mr-1" data-dismiss="modal">DELETE</button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <p class="modal-title">Click outside this box to Cancel.</p>
+                </div>
+           </div> 
+        </div>
+    </div>
+ </div>
+{% endif %}
+                      
+{% include 'home/footer.html' %}
+{% endblock content %}
