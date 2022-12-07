@@ -618,3 +618,26 @@ def beneficiaryDetailView(request,pk):
         data_list = Transaction.objects.filter(beneficiary_id=pk)
         context={ 'data_list':data_list, 'beneficiary':beneficiary}
         return render(request = request,template_name = "beneficiary.html",context=context)
+
+def calcFinanceReport():
+    transaction = read_frame(Transaction.objects.all())
+    txs = transaction.loc[:,['txType','amount']]
+    px = txs.groupby(['txType']).sum().reset_index()
+    px.fillna(0)
+    totalRaised = px.loc[lambda df:df["txType"]=='Deposit','amount'].values[0]
+    totalDondated = px.loc[lambda df:df["txType"]=='Withdraw','amount'].values[0]
+    txs = transaction.loc[:,['project','amount']]
+    px = txs.groupby(['project']).sum().reset_index()
+    totalNumPrj = len(px)
+
+
+    txs = transaction.loc[:,['exType','amount']]
+    ex = txs.groupby(['exType']).sum().reset_index()
+
+    
+
+
+
+
+
+
