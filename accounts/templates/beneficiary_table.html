@@ -9,10 +9,7 @@
           Member List
         </div>
         <div class="card-body">
-          <div id="member" class="ag-theme-balham" data-url={% url 'accounts:beneficiaryAll' %} style="height: 1000px;"></div>
-          {% if user.is_staff %}
-          <a href="{% url 'accounts:beneficiaryAdd'%}" class="btn btn-secondary btn-md">Add Beneficiary</a>
-          {% endif %}
+          <div id="member" class="ag-theme-balham" data-url={% url 'accounts:getBeneficiary' %} style="height: 1000px;"></div>
         </div>
       </div>  
     </div>
@@ -38,7 +35,7 @@
             const colDefs = gridOptions.api.getColumnDefs();
             colDefs.length=0;
             const keys = Object.keys(data[0])
-            keys.forEach(key => colDefs.push({field : key}));
+            keys.forEach(key => colDefs.push({field : key,minWidth:80,maxWidth:180}));
             gridOptions.api.setColumnDefs(colDefs);
             // load fetched data into grid
             gridOptions.api.setRowData(data);

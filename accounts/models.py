@@ -59,19 +59,10 @@ class Project(models.Model):
     updatedBy = models.ForeignKey(User,on_delete=models.PROTECT)
     updatedOn = models.DateTimeField(default=timezone.now)
     prjType = models.ForeignKey(ProjectType, on_delete=models.PROTECT)
-
-    def isCommiteeMember(self, user):
-        member= Member.objects.get(user_id=user.id)
-        committee = Commitee.objects.all().filter(project_id=self.id).filter(member_id = member.id)
-        if committee.exists():
-            return True
-        return False
     
- 
-
     def __str__(self):
-        return "%s " % (self.name) 
-
+        return "%s" % self.name;
+    
 class Role(models.Model):
     title = models.CharField(max_length=64, blank=False, help_text="name")
     priority = models.SmallIntegerField()
@@ -131,11 +122,10 @@ class BankAccount(models.Model):
 
 class Beneficiary(models.Model):
     CATEGORY = [
-        ('Edu-Student','Student'),
-        ('Edu-Teacher','Teacher'),
-        ('Medical','Medical'),
-        ('DryFood','Dryfood'),
-        ('Transport','Transport'),
+        ('Student','Student'),
+        ('Teacher','Teacher'),
+        ('Patient','Patient'),
+        ('Poverty','Poverty'),
     ]
     name =models.CharField(max_length=32)
     mobile=models.CharField(max_length=16,null=True,blank=-True)
@@ -155,6 +145,9 @@ class Beneficiary(models.Model):
     remarks  = models.CharField(max_length=1000,null=True,blank=-True)
     startDate = models.DateField(default=timezone.now)
     endDate = models.DateField(null=True,blank=-True)
+    sponsor = models.CharField(max_length=32,null=True,blank=True)
+    recommender = models.CharField(max_length=32,null=True,blank=True)
+    
 
 class Transaction(models.Model):
     TxType_DEPOSIT='DEPOSIT'
@@ -173,7 +166,7 @@ class Transaction(models.Model):
         ('Confirmed',"Confirmed"),
     ]
     def get_default_beneficiary():
-        return Beneficiary.objects.get(id=14)
+        return Beneficiary.objects.get(id=14).id
 
     bank = models.ForeignKey(BankAccount, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
@@ -181,7 +174,7 @@ class Transaction(models.Model):
     txType  = models.CharField(max_length=10,choices=TXTYPE)
     exType  = models.ForeignKey(ExpenseType, on_delete=models.CASCADE)
     remarks = models.TextField(max_length=100,blank=True,null=True)
-    beneficiary = models.ForeignKey(Beneficiary,on_delete=models.CASCADE, null=True,blank=True, default=get_default_beneficiary)
+    beneficiary = models.ForeignKey(Beneficiary,on_delete=models.CASCADE, default=get_default_beneficiary)
     amount  = models.IntegerField()
     date    = models.DateField(default=timezone.now)
     receipt = models.FileField(upload_to='transaction/%Y',null=True,blank=True)
@@ -190,4 +183,15 @@ class Transaction(models.Model):
     updatedOn = models.DateTimeField(default=timezone.now)
 
 
-
+class ProjectStatus(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    title = models.CharField(max_length=128)
+    content = models.TextField(max_length=2000)
+    photo = models.ImageField(upload_to='images/%Y',blank=True, null=True)
+    video = models.FileField(upload_to='videos/%Y',blank=True, null=True)
+    link = models.URLField(blank=True, null=True, help_text="Optional: any link to share")
+    likes = models.PositiveSmallIntegerField(default=0)
+    dislikes = models.PositiveSmallIntegerField(default=0)
+    comments = models.PositiveSmallIntegerField(default=0)
+    updatedBy = models.ForeignKey(User, related_name='updatedBy', on_delete=models.CASCADE)
+    updatedOn = models.DateTimeField(default=timezone.now)

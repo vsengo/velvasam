@@ -44,6 +44,7 @@
                                     <th scope="col">#</th>
                                     <th scope="col">Account</th>
                                     <th scope="col">Project</th>
+                                    <th scope="col">Beneficiary</th>
                                     <th scope="col">Action</th>
                                     <th scope="col">Expense</th>
                                     <th scope="col">Amount</th>
@@ -63,6 +64,7 @@
                                     <th scope=""row">{{forloop.counter}}</th>
                                     <td>{{tx.bank.name}}</td>
                                     <td>{{tx.project.name}}</td>
+                                    <td>{{tx.beneficiary.name}}</td>
                                     <td>{{tx.txType}} </td>
                                     <td>{{tx.exType}} </td>
                                     <td>{{tx.amount|floatformat:"-3g"}} </td>

@@ -3,7 +3,7 @@ from django import forms
 from django.contrib.auth.models import User
 from util.widgets import BootstrapDateTimePickerInput
 from .models import Commitee, Member, Project, Role, Minute, ExpenseType, Transaction, BankAccount
-from .models import Beneficiary
+from .models import Beneficiary, ProjectStatus
 
 class RegisterForm(UserCreationForm):
     email = forms.EmailField(label = "Email")
@@ -167,3 +167,16 @@ class BeneficiaryForm(forms.ModelForm):
             data.save()
 
         return data
+
+class ProjectStatusForm(forms.ModelForm):
+    class Meta:
+        model = ProjectStatus
+        fields =['title','content','photo']
+    
+    def save(self, commit=True):
+        data = super(ProjectStatusForm, self).save(commit=False)
+        if commit:
+            data.save()
+
+        return data
+

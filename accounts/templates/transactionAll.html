@@ -20,11 +20,16 @@
   <div class="row text-center justify-content-center">
     <div class="card mt-2 mb-2">
       <div class="card-header">
-        <h5>Transactions</h5>
-        {% if userRole == 'EDIT' %}
-        <a href="{% url 'accounts:transactionAdd' %}" class="btn btn-secondary btn-md">Add Transaction</a>
-        <a href="{% url 'accounts:transactionList' 0 %}" class="btn btn-secondary btn-md">Edit Transactions</a>
-        {% endif %}
+        <div class="row">
+          <div class="col-sm-6">
+            {% if userRole == 'EDIT' %}
+             <a href="{% url 'accounts:transactionAdd'  %}" class="btn btn-secondary btn-md">Add Transaction</a>
+            {% endif %}
+          </div>
+          <div class="col-sm-6">
+            <a href="{% url 'accounts:transactionList' 0 %}" class="btn btn-secondary btn-md">Edit Transaction</a>              </div>
+          </div>  
+        </div>
       </div>
       <div class="card-body">
         <div id="transaction" class="ag-theme-balham" data-url={% url 'accounts:getTransactions'  %} style="height: 1000px;"></div>
@@ -55,9 +60,9 @@
           const keys = Object.keys(data[0])
           keys.forEach(function(key){
             if (key == 'expDate'){
-              colDefs.push({field : key,minWidth:80,maxWidth:120});
+              colDefs.push({field : key,minWidth:80,maxWidth:200});
             }else{
-              colDefs.push({field : key});
+              colDefs.push({field : key,minWidth:80,maxWidth:120});
             };
           });
           gridOptions.api.setColumnDefs(colDefs);

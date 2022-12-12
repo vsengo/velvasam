@@ -7,7 +7,8 @@ from .views import transactionAddView, transactionDelView, transactionListView,t
 from .views import bankAccountListView, bankAccountAddView, bankAccountDelView, bankAccountUpdView
 from .views import bankAccountSummary, deleteMember, pwdResetInstruction, beneficiaryListView
 from .views import getTransactions, transactionAllView, beneficiaryAddView, beneficiaryDelView,beneficiaryUpdView
-from .views import beneficiaryDetailView, projectClosedListView
+from .views import beneficiaryDetailView, projectClosedListView, beneficiaryTableView, getBeneficiary
+from .views import projectTableView, getProject, prjStatusAddView, prjStatusDelView, prjStatusListView, prjStatusUpdView
 
 urlpatterns = [
     re_path(r'signup', SignUpView.as_view(), name='signup'),
@@ -18,18 +19,21 @@ urlpatterns = [
     re_path(r'^deleteMember', deleteMember, name='deleteMember'),
     
     re_path(r'beneficiaryDetail/(?P<pk>\d+)', beneficiaryDetailView, name='beneficiaryDetail'),
+    re_path(r'beneficiaryTable', beneficiaryTableView, name='beneficiaryTable'),
     re_path(r'beneficiaryList', beneficiaryListView, name='beneficiaryList'),
     re_path(r'beneficiaryAdd', beneficiaryAddView, name='beneficiaryAdd'),
     re_path(r'beneficiaryDel/(?P<pk>\d+)', beneficiaryDelView, name='beneficiaryDel'),
     re_path(r'beneficiaryUpd/(?P<pk>\d+)', beneficiaryUpdView, name='beneficiaryUpd'),
+    re_path(r'getBeneficiary', getBeneficiary, name='getBeneficiary'),
 
     re_path(r'projectClosedList', projectClosedListView, name='projectClosedList'),
     re_path(r'projectList', projectListView, name='projectList'),
     re_path(r'projectAdd', projectAddView, name='projectAdd'),
-    re_path(r'projectDel/(?P<pk>\d+)', projectDelView, name='projectDel'),
-    re_path(r'projectUpd/(?P<pk>\d+)', ProjectUpd.as_view(), name='projectUpd'),
+    re_path(r'projectDel(?P<pk>\d+)', projectDelView, name='projectDel'),
+    re_path(r'projectUpd(?P<pk>\d+)', ProjectUpd.as_view(), name='projectUpd'),
+    re_path(r'projectTable', projectTableView, name='projectTable'),
+    re_path(r'getProject', getProject, name='getProject'),
 
-    
     re_path(r'bankAccountList', bankAccountListView, name='bankAccountList'),
     re_path(r'bankAccountAdd', bankAccountAddView, name='bankAccountAdd'),
     re_path(r'bankAccountDel(?P<bk>\d+)', bankAccountDelView, name='bankAccountDel'),
@@ -55,6 +59,11 @@ urlpatterns = [
     re_path(r'minuteDel(?P<pk>\d+)', minuteDelView, name='minuteDel'),
     re_path(r'minuteUpd(?P<pk>\d+)', minuteUpdView, name='minuteUpd'),
     
+    re_path(r'prjStatusList(?P<pk>\d+)', prjStatusListView, name='prjStatusList'),
+    re_path(r'prjStatusAdd(?P<pk>\d+)', prjStatusAddView, name='prjStatusAdd'),
+    re_path(r'prjStatusDel(?P<pk>\d+)', prjStatusDelView, name='prjStatusDel'),
+    re_path(r'prjStatusUpd(?P<pk>\d+)', prjStatusUpdView, name='prjStatusUpd'),
+    \
     re_path(r'^change_password/$', change_password, name='change_password'),
     re_path(r'pwdResetInstruction$', pwdResetInstruction, name='pwdResetInstruction'),
 

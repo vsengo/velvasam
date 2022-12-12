@@ -11,7 +11,7 @@ from django.contrib  import messages
 from django.db import IntegrityError
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from   django_pandas.io import read_frame
+from  django_pandas.io import read_frame
 
 from django.db.models import Sum, Count
 from django.conf import settings
@@ -23,9 +23,9 @@ from datetime import datetime
 from django.utils  import timezone
 from accounts.forms import RegisterForm, UserForm, MemberForm, ProjectForm, CommiteeForm, MinuteForm, TransactionForm, TransactionUserForm, BankAccountForm
 from accounts.models import BankAccount, Commitee, Member, Project, Minute, UserRole, Transaction, ExpenseType, BankAccount
-from accounts.serializers import MemberSerializer, TransactionSerializer
-from accounts.models import Beneficiary
-from accounts.forms import BeneficiaryForm
+from accounts.serializers import BeneficiarySerializer, TransactionSerializer, ProjectSerializer
+from accounts.models import Beneficiary, ProjectStatus
+from accounts.forms import BeneficiaryForm, ProjectStatusForm
 
 class SignUpView(generic.CreateView):
     form_class = RegisterForm
@@ -206,7 +206,7 @@ def calculate():
 def projectListView(request):
     if request.method == 'GET':
         calculate()
-        projects = Project.objects.filter(status=Project.IN_PROGRESS)
+        projects = Project.objects.exclude(status=Project.COMPLETED)
         user = User.objects.get(id=request.user.id)
         userRole=getUserRole(user,'project')
         return render(request = request,template_name = "project_list.html",context={'project_list':projects, 'userRole':userRole})
@@ -238,6 +238,15 @@ class ProjectUpd(UpdateView):
     def get_queryset(self):
         return Project.objects.filter(id=self.kwargs['pk'])
 
+@api_view(['GET'])
+def getProject(request):
+    data=Project.objects.all()
+    eqSerializer = ProjectSerializer(data,many=True)
+    return Response(eqSerializer.data)
+    
+@login_required
+def projectTableView(request):
+    return render(request = request,template_name = "project_table.html")
 
 @login_required
 def committeeAddView(request,pk):
@@ -301,7 +310,7 @@ def minuteAddView(request,pk):
     user = User.objects.get(id=request.user.id)  
     
     if request.method == 'GET':
-        userRole=project.getUserRole(user,'Minute')
+        userRole=getUserRole(user,'Minute')
         form = MinuteForm()
         return render(request = request,template_name = "minute.html",context={"form":form,'project':project,'userRole':userRole})
         
@@ -325,7 +334,6 @@ def minuteListView(request,pk):
         user = User.objects.get(id=request.user.id)
         prj=Project.objects.get(id=pk)
         userRole=getUserRole(user,'minute')
-        userRole=prj.getUserRole(user,'Minute')
         return render(request = request,template_name = "minute_list.html",context={'minute_list':minutes, 'userRole':userRole, 'project':prj})
 
 class MinuteUpd(UpdateView):
@@ -368,12 +376,9 @@ def minuteDelView(request,pk):
     minute = Minute.objects.get(id=pk)
     user = User.objects.get(id=request.user.id)
     project=Project.objects.get(id=minute.project_id)
-    userRole=UserRole.EDIT
-
     minute.delete()     
-    minuteList = Minute.objects.all().filter(project_id=project.id)
     
-    return render(request = request,template_name = "minute_list.html",context={'minute_list':minuteList,'project':project, 'userRole':userRole})
+    return redirect('accounts:minuteList', pk=project.id);
 
 @login_required
 def transactionAllView(request):
@@ -560,11 +565,14 @@ def memberList(request):
     return render(request,'member_list.html')
 
 @api_view(['GET'])
-def memberAll(request):
-    data=User.objects.all()
-    eqSerializer = MemberSerializer(data,many=True)
+def getBeneficiary(request):
+    data=Beneficiary.objects.all().exclude(id=14)
+    eqSerializer = BeneficiarySerializer(data,many=True)
     return Response(eqSerializer.data)
 
+@login_required
+def beneficiaryTableView(request):
+        return render(request = request,template_name = "beneficiary_table.html")
 @login_required
 def beneficiaryAddView(request):
     return beneficiaryUpdView(request,'x')
@@ -621,7 +629,9 @@ def beneficiaryDetailView(request,pk):
 
 def calcFinanceReport():
     transaction = read_frame(Transaction.objects.all())
-    txs = transaction.loc[:,['txType','amount']]
+    txs = transaction.loc[:,['txType','date','amount']]
+    txs['year'] = DateUtils.cv2Year(txs['date'])
+    
     px = txs.groupby(['txType']).sum().reset_index()
     px.fillna(0)
     totalRaised = px.loc[lambda df:df["txType"]=='Deposit','amount'].values[0]
@@ -630,11 +640,103 @@ def calcFinanceReport():
     px = txs.groupby(['project']).sum().reset_index()
     totalNumPrj = len(px)
 
-
     txs = transaction.loc[:,['exType','amount']]
     ex = txs.groupby(['exType']).sum().reset_index()
 
+
+@login_required
+def prjStatusListView(request, pk):
+    prj=Project.objects.get(id=pk)
+    user = User.objects.get(id=request.user.id)
+    if request.method == 'GET':
+        userRole=getUserRole(user,'ProjectStatus')
+        status_list = ProjectStatus.objects.all().filter(project_id=pk).order_by('-updatedOn')
+        return render(request = request,template_name = "prjstatus_list.html",context={'project':prj, 'status_list':status_list, 'userRole':userRole})
+
+@login_required
+def prjStatusAddView(request,pk):
+    user = User.objects.get(id=request.user.id)
+    prj = Project.objects.get(id=pk)
+    if request.method == 'GET':
+        form = ProjectStatusForm()
+        return render(request = request,template_name = "common_form.html",context={"form":form,'project':prj})
     
+    if request.method == 'POST':
+        form = ProjectStatusForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                obj=form.save(commit=False)
+                project = Project.objects.get(id=prj.id)
+                obj.updatedBy = user
+                obj.project = project
+                obj.save()
+                
+                if obj.photo:
+                    today = datetime.now()
+                    twidth, theight = 600, 800
+                    fname, ext = path.splitext(obj.photo.name)
+                    albumPath = path.join(settings.MEDIA_ROOT, "images")
+                    opath = path.join(settings.MEDIA_ROOT,fname + ext)
+                    nfname = today.strftime("%Y") + "/" + today.strftime("%m%dT%H%M%S") + ext
+                    npath = path.join(albumPath,nfname)
+                    photo = Image.open(opath)
+                    width, height = photo.size
+                    if (width > twidth):
+                        photo = img.apply_orientation(photo)
+                        photo.thumbnail((twidth, theight), Image.HAMMING)
+                    photo.save(opath)
+                    rename(opath,npath)
+                    obj.photo.name = "images/"+nfname
+                    obj.save(update_fields=['photo'])
+
+            except IOError as err:
+                print("Exception file processing image {0}".format(err))
+                pass
+            except IntegrityError as e:
+                error={'message':'Could not save to database'}
+                return render(request,template_name='error.html',context=error)
+
+            return redirect('accounts:prjStatusList', pk=project.id)        
+        else:
+            error={'message':'Error'}
+            return render(request,template_name='error.html',context=error)
+  
+@login_required
+def prjStatusUpdView(request,pk):
+    user = User.objects.get(id=request.user.id)
+    ctx = ProjectStatus.objects.get(id=pk)  
+    project = Project.objects.get(id=ctx.project_id)
+    
+    if request.method == 'GET':
+        form  = ProjectStatusForm(instance = ctx)
+        return render(request,template_name='common_form.html',context={'form':form})
+
+    if request.method == 'POST':
+        form = ProjectStatusForm(request.POST,request.FILES )
+        if form.is_valid():
+            obj=form.save(commit=False)
+            obj.updatedBy = user
+            obj.project = project
+            obj.id = ctx.id
+            obj.save()
+        else:
+            error={'message':'Error in Data input to Minutes'}
+            return render(request,template_name='error.html',context=error)
+
+    return redirect('accounts:prjStatusList', pk=project.id)    
+
+@login_required
+def prjStatusDelView(request,pk):
+    sts = ProjectStatus.objects.filter(id=pk).first()
+    pid=sts.project_id
+    sts.delete()
+    return redirect('accounts:prjStatusList', pk=pid)    
+
+def statusView(request):
+    status_list = ProjectStatus.objects.all().order_by('-updatedOn')
+    return render(request,'status.html', context={'status_list':status_list})
+
+
 
 
 
