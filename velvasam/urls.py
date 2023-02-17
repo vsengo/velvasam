@@ -19,11 +19,13 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 from accounts import urls
+from reports import urls
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     re_path(r'', include('home.urls')),
     re_path(r'accounts/', include(('accounts.urls','accounts'),namespace='accounts')),
+    re_path(r'reports/', include(('reports.urls','reports'),namespace='reports')),
 ]
 
 if settings.DEBUG:

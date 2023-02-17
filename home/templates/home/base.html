@@ -44,10 +44,9 @@
                     <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">Reports</a>                    
                     <ul class="dropdown-menu">
                         {% if user.is_authenticated %}
+                        <li><a class="dropdown-item" href={% url 'reports:reportByMonth' %}>Expense Report </a></li>       
                         <hr>
                         <li><a class="dropdown-item" href="#">Meeting Minutes</a></li>
-                        <li><a class="dropdown-item" href="#">Financial Report</a></li>       
-                        <hr>
                         {% endif %}                      
                     </ul>
                 </div>
