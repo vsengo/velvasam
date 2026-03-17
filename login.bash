@@ -1,6 +1,4 @@
 #!/bin/bash
 appName=velvasam
-keyDir=~/Documents/MyFin/Finance_2022/finApp/SengoMac.pem
-
-ssh -i  $keyDir  ec2-user@34.229.92.71
-
+keyDir=~/Documents/MyWeb/velvasam/SengoRSAforEC2.pem
+ssh -v -i $keyDir ec2@ec2-52-55-52-125.compute-1.amazonaws.com
