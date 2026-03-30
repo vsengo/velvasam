@@ -1,0 +1,87 @@
+{% extends 'home/base.html' %}
+{% block content %}
+<script type="text/javascript">
+    function confirmDeleteModal(id){
+        $('#delete_confirm_form').attr('action',"/accounts/prjStatusDel"+id);
+        $('#deleteUserModal').modal('show');
+    };    
+</script>
+{% if userRole == 'NONE' %}
+<div class="container-fluid">
+    <div class="row text-center justify-content-center">
+            <div class="card mt-2 mb-2">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-sm-12">
+                        Unauthorized to view the content
+                    </div>
+                </div>
+            </div>
+            </div>
+    </div>
+</div>
+{% else %}
+<div class="container-fluid">
+    <div class="row text-center justify-content-center">
+            <div class="card mt-2 mb-2">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-sm-12">
+                        {% if userRole == 'EDIT' %}
+                         <a href="{% url 'accounts:prjStatusAdd' project.id %}" class="btn btn-secondary btn-md">Add Project Status</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                {% for data in status_list %}
+                <div class="card mb-12">
+                    <div class="row g-0">
+                    {% if data.photo %}
+                      <div class="col-md-4">
+                        <img src={{data.photo.url}} class="img-fluid rounded-start" alt="...">
+                      </div>
+                    {% endif %}
+                      <div class="col-md-8">
+                        <div class="card-body">
+                          <h5 class="card-title">{{data.title}} ({{data.updatedOn}})</h5>
+                          <p class="card-text">{{data.content}}</p>
+                        </div>
+                        <div class="card-footer">
+                            {% if userRole == 'EDIT' %}
+                            <a href="{% url 'accounts:prjStatusUpd' data.id %}" class="btn btn-secondary btn-md"> Update</a>
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" onclick="confirmDeleteModal('{{data.id}}')" id="deleteID">
+                                    Delete </button>
+                            {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                <hr>
+                {% endfor %}
+
+            </div>
+        </div>
+    </div>
+ </div>
+
+ <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+       <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" style="color:red">Confirm you want to Delete the  Project Status.</h5>
+                <form id="delete_confirm_form" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning mr-1" data-dismiss="modal">DELETE</button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <p class="modal-title">Click outside this box to Cancel.</p>
+            </div>
+       </div> 
+    </div>
+</div>
+{% endif %}
+{% include 'home/footer.html' %}
+{% endblock content %}
