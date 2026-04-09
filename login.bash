@@ -1,4 +1,5 @@
-#!/bin/bash
 appName=velvasam
-keyDir=~/Documents/MyWeb/velvasam/SengoRSAforEC2.pem
-ssh -v -i $keyDir ec2@ec2-52-55-52-125.compute-1.amazonaws.com
+keyDir=~/Documents/MyWeb/velvasam2026/velvasam.pem
+IP=184.72.112.22
+USER=bitnami
+ssh -v -i $keyDir $USER@$IP
