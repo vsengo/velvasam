@@ -12,10 +12,10 @@ import os
 import sys
 
 from django.core.wsgi import get_wsgi_application
-sys.path.append('/opt/bitnami/projects/e85dj')
-os.environ.setdefault("PYTHON_EGG_CACHE", "/opt/bitnami/e85dj/egg_cache")
+sys.path.append('/opt/bitnami/projects/velvasam')
+os.environ.setdefault("PYTHON_EGG_CACHE", "/opt/bitnami/velvasam/egg_cache")
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'e85dj.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'velvasam.settings')
 
 application = get_wsgi_application()
 
