@@ -28,9 +28,9 @@
             <div class="card-header">
                 <div class="row">
                     <div class="col-sm-12">
-                        <strong>Transactions for {{project_name}}</strong><br>
+                        <strong>Project: {{project_name}}</strong><br>
                         {% if userRole == 'EDIT' %}
-                        <a href="{% url 'accounts:transactionAdd' %}" class="btn btn-secondary btn-md">Add Transaction</a>
+                        <a href="{% url 'accounts:transactionAdd' %}" class="btn btn-secondary btn-sm mt-2">Add Transaction</a>
                         {% endif %}
                         </div>   
                 </div>
@@ -38,52 +38,83 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-sm-12">
-                        <table class="table table-striped table-hover">
-                            <thead>
-                                <tr>
-                                    <th scope="col">#</th>
-                                    <th scope="col">Account</th>
-                                    <th scope="col">Project</th>
-                                    <th scope="col">Beneficiary</th>
-                                    <th scope="col">Action</th>
-                                    <th scope="col">Expense</th>
-                                    <th scope="col">Amount</th>
-                                    <th scope="col">Date</th>
-                                    <th scope="col">Remarks</th>
-                                    <th scope="col">Status</th>
-                                    <th scope="col">Name</th>
-                                    {% if userRole == 'EDIT' %}
-                                    <th scope="col">Update </th>
-                                    <th scope="col">Delete </th>
-                                    {% endif %} 
-                                </tr>
-                            </thead>
-                            <tbody>
-                               {% for tx in transaction_list %}
-                                <tr>
-                                    <th scope=""row">{{forloop.counter}}</th>
-                                    <td>{{tx.bank.name}}</td>
-                                    <td>{{tx.project.name}}</td>
-                                    <td>{{tx.beneficiary.name}}</td>
-                                    <td>{{tx.txType}} </td>
-                                    <td>{{tx.exType}} </td>
-                                    <td>{{tx.amount|floatformat:"-3g"}} </td>
-                                    <td>{{tx.date}}</td>
-                                    <td>{{tx.remarks}}</td>
-                                    <td>{{tx.confirmed}}</td>
-                                    <td>{{tx.owner.first_name}} {{tx.owner.last_name}}</td>
-                                    {% if userRole == 'EDIT' %}
-                                    <td><a href="{% url 'accounts:transactionUpd' tx.id %}" class="btn btn-danger btn-md">Edit</a></td>
-                                    <td>
-                                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" onclick="confirmDeleteModal('{{tx.id}}')" id="deleteID">
-                                            Delete
-                                        </button> 
-                                    </td>
-                                    {% endif %} 
-                                </tr>
+                        <div class="d-lg-none">
+                            <div class="toast-container p-0" role="alert" aria-live="assertive" aria-atomic="true">
+                                {% for tx in transaction_list %}
+                                <div class="toast show mb-3 w-90">
+                                    <div class="toast-header text-white bg-secondary">
+                                        <strong class="me-auto">{{ tx.date }} | {{ tx.txType }}</strong> 
+                                        {% if userRole == 'EDIT' %}
+                                            <button type="button"><a href="{% url 'accounts:transactionUpd' tx.id %}">Edit</a></button>
+                                            <button type="button" data-bs-toggle="modal" onclick="confirmDeleteModal('{{tx.id}}')" id="deleteID">
+                                                Delete
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                    <div class="toast-body">
+                                        <p class="mb-1"><strong>Account:</strong> {{ tx.bank.name }}</p>          
+                                        <p class="mb-1"><strong>Project:</strong> {{ tx.project.name }}</p>
+                                        <p class="mb-1"><strong>Beneficiary:</strong> {{ tx.beneficiary.name }}</p>
+                                        <p class="mb-1"><strong>Expense:</strong> {{ tx.exType }}</p>
+                                        <p class="mb-1"><strong>Amount:</strong> {{ tx.amount|floatformat:"-3g" }}</p>
+                                        <p class="mb-1"><strong>Status:</strong> {{ tx.confirmed }}</p>
+                                        <p class="mb-1"><strong>Owner:</strong> {{ tx.owner.first_name }} {{ tx.owner.last_name }}</p>
+                                        <p class="mb-1"><strong>Remarks:</strong> {{ tx.remarks }}</p>
+                                    </div>
+                                </div>
                                 {% endfor %}
-                            </tbody>
-                        </table>
+                            </div>
+                        </div>
+                        <div class="d-none d-lg-block">
+                          <div class="table-responsive">
+                            <table class="table table-striped table-hover table-sm">
+                              <thead>
+                                  <tr>
+                                      <th scope="col">#</th>
+                                      <th scope="col">Account</th>
+                                      <th scope="col" class="d-none d-sm-table-cell">Project</th>
+                                      <th scope="col" class="d-none d-md-table-cell">Beneficiary</th>
+                                      <th scope="col">Action</th>
+                                      <th scope="col" class="d-none d-md-table-cell">Expense</th>
+                                      <th scope="col">Amount</th>
+                                      <th scope="col">Date</th>
+                                      <th scope="col" class="d-none d-lg-table-cell">Remarks</th>
+                                      <th scope="col">Status</th>
+                                      <th scope="col" class="d-none d-lg-table-cell">Name</th>
+                                      {% if userRole == 'EDIT' %}
+                                      <th scope="col">Update</th>
+                                      <th scope="col">Delete</th>
+                                      {% endif %} 
+                                  </tr>
+                              </thead>
+                              <tbody>
+                                 {% for tx in transaction_list %}
+                                  <tr>
+                                      <th scope="row">{{forloop.counter}}</th>
+                                      <td>{{tx.bank.name}}</td>
+                                      <td class="d-none d-sm-table-cell">{{tx.project.name}}</td>
+                                      <td class="d-none d-md-table-cell">{{tx.beneficiary.name}}</td>
+                                      <td>{{tx.txType}}</td>
+                                      <td class="d-none d-md-table-cell">{{tx.exType}}</td>
+                                      <td>{{tx.amount|floatformat:"-3g"}}</td>
+                                      <td>{{tx.date}}</td>
+                                      <td class="d-none d-lg-table-cell text-wrap">{{tx.remarks}}</td>
+                                      <td>{{tx.confirmed}}</td>
+                                      <td class="d-none d-lg-table-cell">{{tx.owner.first_name}} {{tx.owner.last_name}}</td>
+                                      {% if userRole == 'EDIT' %}
+                                      <td><a href="{% url 'accounts:transactionUpd' tx.id %}" class="btn btn-danger btn-sm mb-1">Edit</a></td>
+                                      <td>
+                                          <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" onclick="confirmDeleteModal('{{tx.id}}')" id="deleteID">
+                                              Delete
+                                          </button> 
+                                      </td>
+                                      {% endif %} 
+                                  </tr>
+                                  {% endfor %}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
                         </div>
                 </div>
                 <hr>
