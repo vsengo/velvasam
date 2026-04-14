@@ -9,8 +9,13 @@ from django.views import generic
 from django.views.generic import UpdateView
 from django.contrib  import messages
 from django.db import IntegrityError
+from requests import request
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from accounts.models import Transaction
+from accounts.serializers import TransactionSerializer
+from django.contrib.auth.decorators import login_required
 from  django_pandas.io import read_frame
 
 from django.db.models import Sum, Count
@@ -206,7 +211,8 @@ def calculate():
 def projectListView(request):
     if request.method == 'GET':
         calculate()
-        projects = Project.objects.exclude(status=Project.COMPLETED)
+        projects = Project.objects.exclude(status=Project.COMPLETED).order_by('-updatedOn')
+        #projects = Project.objects.filter(/* your filters */).order_by('-updatedOn')
         user = User.objects.get(id=request.user.id)
         userRole=getUserRole(user,'project')
         return render(request = request,template_name = "project_list.html",context={'project_list':projects, 'userRole':userRole})
@@ -382,24 +388,31 @@ def minuteDelView(request,pk):
 
 @login_required
 def transactionAllView(request):
-    if request.method == 'GET':
-        user = User.objects.get(id=request.user.id)
-        userRole = getUserRole(user,'transaction')
-        return render(request = request,template_name = "transactionAll.html", context={"userRole":userRole})
+    user = User.objects.get(id=request.user.id)
+    userRole = getUserRole(user,'transaction')
+    return render(request, 'transactionAll.html', {'userRole': userRole})
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])   # require login via DRF auth/session
+def getTransactions(request):
+    """
+    Return all transactions as JSON, newest first.
+    """
+    qs = Transaction.objects.all().order_by('-date')
+    serializer = TransactionSerializer(qs, many=True)
+    return Response(serializer.data)
 
 @login_required
-def transactionListView(request,pk):
-    if request.method == 'GET':
-        user = User.objects.get(id=request.user.id)
-        userRole = getUserRole(user,'transaction')
-        if pk == '0':
-            tx = Transaction.objects.all()
-            project_name="All projects"
-        else:
-            tx = Transaction.objects.filter(project_id=pk)
-            project_name = Project.objects.get(id=pk).name
-
-        return render(request = request,template_name = "transaction_list.html",context={"transaction_list":tx, "userRole":userRole,'project_name':project_name})
+def transactionListView(request, pk):
+    user = User.objects.get(id=request.user.id)
+    userRole = getUserRole(user,'transaction')
+    if pk == 0 or str(pk) == '0':
+        tx = Transaction.objects.all().order_by('-date')   # latest first, all projects
+        project_name = "All projects"
+    else:
+        tx = Transaction.objects.filter(project_id=pk).order_by('-date')
+        project_name = Project.objects.get(id=pk).name
+    return render(request, "transaction_list.html", {"transaction_list": tx, "userRole": userRole, "project_name": project_name})
 
 @login_required
 def transactionAddView(request):
@@ -614,12 +627,16 @@ def beneficiaryDelView(request,pk):
 def beneficiaryListView(request):
     user = User.objects.get(id=request.user.id)
     if request.method == 'GET':
-        data_list = Beneficiary.objects.all().exclude(id=14)
+        try:
+            data_list = Beneficiary.objects.all().exclude(id=14).order_by('-updatedOn')
+        except Exception:
+            # fallback if updatedOn field doesn't exist
+            data_list = Beneficiary.objects.all().exclude(id=14).order_by('-id')
         userRole=getUserRole(user,'beneficiary')
         print('userRole :'+userRole)
         context={ 'data_list':data_list, 'userRole':userRole}
         return render(request = request,template_name = "beneficiary_list.html",context=context)
-
+    
 def beneficiaryDetailView(request,pk):
     if request.method == 'GET':
         beneficiary = Beneficiary.objects.filter(id=pk).first()

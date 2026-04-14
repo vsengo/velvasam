@@ -9,6 +9,10 @@ from .views import bankAccountSummary, deleteMember, pwdResetInstruction, benefi
 from .views import getTransactions, transactionAllView, beneficiaryAddView, beneficiaryDelView,beneficiaryUpdView
 from .views import beneficiaryDetailView, projectClosedListView, beneficiaryTableView, getBeneficiary
 from .views import projectTableView, getProject, prjStatusAddView, prjStatusDelView, prjStatusListView, prjStatusUpdView
+from django.urls import path
+from . import views
+
+app_name = 'accounts'
 
 urlpatterns = [
     re_path(r'signup', SignUpView.as_view(), name='signup'),
@@ -91,4 +95,8 @@ urlpatterns = [
     re_path(r'password_reset_complete',
          auth_views.PasswordResetCompleteView.as_view(template_name='accounts/password_reset/pwdreset_complete.html'),
          name='password_reset_complete'),
+
+    path('transactions/<int:pk>/', views.transactionListView, name='transactionList'),
+    path('transactions/all/', views.transactionAllView, name='transactionAll'),
+    path('api/transactions/', views.getTransactions, name='getTransactions'),
 ]
