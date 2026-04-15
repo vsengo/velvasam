@@ -9,13 +9,14 @@ from django.views import generic
 from django.views.generic import UpdateView
 from django.contrib  import messages
 from django.db import IntegrityError
+from rest_framework import request
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from accounts.models import Transaction
 from accounts.serializers import TransactionSerializer
 from django.contrib.auth.decorators import login_required
-from  django_pandas.io import read_frame
+from django_pandas.io import read_frame
 
 from django.db.models import Sum, Count
 from django.conf import settings
@@ -31,6 +32,10 @@ from accounts.serializers import BeneficiarySerializer, TransactionSerializer, P
 from accounts.models import Beneficiary, ProjectStatus
 from accounts.forms import BeneficiaryForm, ProjectStatusForm
 from util.date import DateUtil
+
+from django.http import HttpResponse
+from openpyxl import Workbook
+from .models import Transaction
 
 class SignUpView(generic.CreateView):
     form_class = RegisterForm
@@ -406,15 +411,17 @@ def getTransactions(request):
 def transactionListView(request, pk):
     user = User.objects.get(id=request.user.id)
     userRole = getUserRole(user,'transaction')
-    if pk == 0 or str(pk) == '0':
-        tx = Transaction.objects.all().order_by('-date')   # latest first, all projects
-        project_name = "All projects"
-    else:
-        tx = Transaction.objects.filter(project_id=pk).order_by('-date')
-        project_name = Project.objects.get(id=pk).name
-    return render(request, "transaction_list.html", {"transaction_list": tx, "userRole": userRole, "project_name": project_name})
 
-@login_required
+    tx, project_name = get_transactions_by_project(pk)
+
+    return render(request, "transaction_list.html", {
+        "transaction_list": tx,
+        "userRole": userRole,
+        "project_name": project_name,
+        "pk": pk
+})
+    
+@login_required 
 def transactionAddView(request):
     user = User.objects.get(id=request.user.id)
     if request.method == 'GET':
@@ -452,6 +459,59 @@ def transactionAddView(request):
         else:
             error={'message':'Error'}
             return render(request,template_name='error.html',context=error)
+        
+def get_transactions_by_project(pk):
+    if pk == 0 or str(pk) == '0':
+        tx = Transaction.objects.all().order_by('-date')
+        project_name = "All projects"
+    else:
+        tx = Transaction.objects.filter(project_id=pk).order_by('-date')
+        project_name = Project.objects.get(id=pk).name
+
+    return tx, project_name
+
+@login_required
+def transactionExcelView(request, pk):
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Transactions"
+
+    ws.append([
+        "ID", "Account", "Project", "Beneficiary",
+        "Action", "Expense", "Amount", "Date",
+        "Status", "Owner", "Remarks"
+    ])
+
+    # ✅ reuse logic
+    transaction_list, _ = get_transactions_by_project(pk)
+
+    for t in transaction_list:
+        ws.append([
+            t.id,
+            t.bank.name,
+            t.project.name,
+            t.beneficiary.name,
+            str(t.txType),
+            str(t.exType),
+            float(t.amount),
+            t.date.strftime("%Y-%m-%d"),
+            t.confirmed,
+            f"{t.owner.first_name} {t.owner.last_name}",
+            t.remarks
+        ])
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response['Content-Disposition'] = 'attachment; filename=transactions.xlsx'
+
+    wb.save(response)
+    return response
+
+@login_required
+def transactionPdfView(request):
+    return something
+
 
 @login_required
 def transactionUpdView(request,pk):
