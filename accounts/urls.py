@@ -3,7 +3,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import path,re_path,include
 from .views import  SignUpView, deleteMember, logOff, logIn, memberView, projectAddView,projectListView,projectDelView,ProjectUpd, change_password
 from .views import committeeAddView, CommitteeUpd, committeeDelView,committeeListView, minuteAddView, minuteDelView, minuteListView, minuteUpdView
-from .views import transactionAddView, transactionDelView, transactionListView,transactionUpdView, memberUpdView
+from .views import transactionAddView, transactionDelView, transactionListView,transactionUpdView, memberUpdView, transactionExcelView, transactionPdfView
 from .views import bankAccountListView, bankAccountAddView, bankAccountDelView, bankAccountUpdView
 from .views import bankAccountSummary, deleteMember, pwdResetInstruction, beneficiaryListView
 from .views import getTransactions, transactionAllView, beneficiaryAddView, beneficiaryDelView,beneficiaryUpdView
@@ -46,6 +46,8 @@ urlpatterns = [
     re_path(r'transactionAll', transactionAllView, name='transactionAll'),
     re_path(r'transactionList(?P<pk>\d+)', transactionListView, name='transactionList'),
     re_path(r'transactionAdd', transactionAddView, name='transactionAdd'),
+    re_path(r'transactionExcel(?P<pk>\d+)', transactionExcelView, name='transactionExcel'),
+    re_path(r'transactionPDF', transactionPdfView, name='transactionPdf'),
     re_path(r'transactionUpd(?P<pk>\d+)', transactionUpdView, name='transactionUpd'),
     re_path(r'transactionDel(?P<pk>\d+)', transactionDelView, name='transactionDel'),
 

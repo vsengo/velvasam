@@ -7,7 +7,7 @@
         $('#deleteUserModal').modal('show');
     };    
 </script>
-
+<h1>Export to Excel successfully</h1>
 {% if userRole == 'NONE' %}
 <div class="container-fluid">
     <div class="row text-center justify-content-center">
@@ -32,15 +32,11 @@
                         <strong>Project: {{project_name}}</strong><br>
                         {% if userRole == 'EDIT' %}
                         <a href="{% url 'accounts:transactionAdd' %}" class="btn btn-secondary btn-sm mt-2">Add Transaction</a>
-                        {% comment %} <a href="{% url 'accounts:transactionExcel' pk=pk %}" class="btn btn-secondary btn-sm mt-2">Export to Excel</a> {% endcomment %}
-                        <button onclick="exportExcel()" class="btn btn-secondary btn-sm mt-2">
-                            Export to Excel
-                        </button>
+                        <a href="{% url 'accounts:transactionExcel' %}" class="btn btn-secondary btn-sm mt-2">Export to Excel</a>
                         <a href="{% url 'accounts:transactionPdf' %}" class="btn btn-secondary btn-sm mt-2">Export to PDF</a>
                         {% endif %}
-                        </div>    
+                        </div>   
                 </div>
-                
             </div>
             <div class="card-body">
                 <div class="row">
@@ -147,22 +143,6 @@
     </div>
  </div>
 {% endif %}
-
-<script>
-function exportExcel() {
-    fetch("{% url 'accounts:transactionExcel' pk=pk %}")
-    .then(response => response.blob())
-    .then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = "transactions.xlsx";
-        a.click();
-
-        alert("Export successful ✅");
-    });
-}
-</script>
                       
 {% include 'home/footer.html' %}
 {% endblock content %}
