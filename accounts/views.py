@@ -22,7 +22,7 @@ from django.db.models import Sum, Count
 from django.conf import settings
 from django.http import JsonResponse
 from os import path, rename
-from util import img
+from util import img, date
 from PIL import Image
 from datetime import datetime
 from django.utils  import timezone
@@ -76,7 +76,8 @@ def change_password(request):
             user = form.save()
             update_session_auth_hash(request, user)  # Important!
             messages.success(request, 'Your password was successfully updated!')
-            return redirect('login')
+            form = AuthenticationForm()
+            return render(request = request,template_name = "login.html",context={"form":form})
         else:
             messages.error(request, 'Please correct the error below.')
     else:
@@ -510,7 +511,7 @@ def transactionExcelView(request, pk):
 
 @login_required
 def transactionPdfView(request):
-    return something
+    return False
 
 
 @login_required
@@ -707,7 +708,7 @@ def beneficiaryDetailView(request,pk):
 def calcFinanceReport():
     transaction = read_frame(Transaction.objects.all())
     txs = transaction.loc[:,['txType','date','amount']]
-    txs['year'] = DateUtils.cv2Year(txs['date'])
+    txs['year'] = date.DateUtils.cv2Year(txs['date'])
     
     px = txs.groupby(['txType']).sum().reset_index()
     px.fillna(0)
