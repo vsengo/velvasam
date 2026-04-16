@@ -696,7 +696,50 @@ def beneficiaryListView(request):
         print('userRole :'+userRole)
         context={ 'data_list':data_list, 'userRole':userRole}
         return render(request = request,template_name = "beneficiary_list.html",context=context)
+
+
+def beneficiaryExcelView(request):
+    user = User.objects.get(id=request.user.id)
+    if request.method == 'GET':
+        try:
+            data_list = Beneficiary.objects.all().exclude(id=14).order_by('-updatedOn')
+        except Exception:
+            # fallback if updatedOn field doesn't exist
+            data_list = Beneficiary.objects.all().exclude(id=14).order_by('-id')
     
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Beneficiaries"
+
+    ws.append([
+        "ID", "Name", "Recomender", "Category",
+        "School", "Grade", "Amount"
+    ])       
+
+    for b in data_list:
+        ws.append([
+            b.id,
+            b.name,
+            b.recommender,
+            b.category,
+            b.school,
+            b.grade,
+            float(b.amount)
+        ])
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response['Content-Disposition'] = 'attachment; filename=beneficiaries.xlsx'
+
+    wb.save(response)
+    return response
+
+@login_required
+def beneficiaryPdfView(request):
+    return something
+
 def beneficiaryDetailView(request,pk):
     if request.method == 'GET':
         beneficiary = Beneficiary.objects.filter(id=pk).first()

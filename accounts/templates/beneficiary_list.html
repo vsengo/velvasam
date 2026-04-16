@@ -26,13 +26,17 @@
         <div class="card mt-2 mb-2">
             <div class="card-header">
                 <div class="row">
-                    <div class="col-sm-6">
+                    <div class="col-sm-12">
                         {% if userRole == 'EDIT' %}
                          <a href="{% url 'accounts:beneficiaryAdd'  %}" class="btn btn-secondary btn-md">Add Beneficiary</a>
                         {% endif %}
-                    </div>
-                    <div class="col-sm-6">
-                        <a href="{% url 'accounts:beneficiaryTable'  %}" class="btn btn-secondary btn-md">View Beneficiaries</a>              </div>
+                        <a href="{% url 'accounts:beneficiaryTable'  %}" class="btn btn-secondary btn-md">View Beneficiaries</a>              
+                        {% comment %} <a href="{% url 'accounts:beneficiaryExcel'  %}" class="btn btn-secondary btn-md">Export to Excel</a>   {% endcomment %}
+                        <button onclick="exportExcel()" class="btn btn-secondary btn-md">
+                            Export to Excel
+                        </button>    
+                        <a href="{% url 'accounts:beneficiaryPdf'  %}" class="btn btn-secondary btn-md">Export to PDF</a>           
+                        
                     </div>
                 </div>
             </div>
@@ -55,7 +59,7 @@
                 <tbody>
                    {% for data in data_list %}
                     <tr>
-                        <th scope=""row">{{forloop.counter}}</th>
+                        <th scope"row">{{forloop.counter}}</th>
                         <td>{{data.name}} </td>
                         <td>{{data.recommender}} </td>
                         <td>{{data.category}} </td>
@@ -95,5 +99,22 @@
     </div>
  </div>
 {% endif %}
+
+<script>
+function exportExcel() {
+    fetch("{% url 'accounts:beneficiaryExcel' %}")
+    .then(response => response.blob())
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "beneficiaries.xlsx";
+        a.click();
+
+        alert("Export successful ✅");
+    });
+}
+</script>
+
 {% include 'home/footer.html' %}
 {% endblock content %}
