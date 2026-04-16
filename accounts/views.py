@@ -37,6 +37,9 @@ from django.http import HttpResponse
 from openpyxl import Workbook
 from .models import Transaction
 
+from django.template.loader import render_to_string
+from weasyprint import HTML
+
 class SignUpView(generic.CreateView):
     form_class = RegisterForm
     success_url = reverse_lazy('accounts:login')
@@ -509,8 +512,21 @@ def transactionExcelView(request, pk):
     return response
 
 @login_required
-def transactionPdfView(request):
-    return something
+def transactionPdfView(request, pk):    
+    transaction_list, _ = get_transactions_by_project(pk)
+
+    html_string = render_to_string(
+        'accounts/transaction_pdf.html',
+        {'data_list': transaction_list}
+    )
+
+    html = HTML(string=html_string)
+    pdf = html.write_pdf()
+
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="transactions.pdf"'
+
+    return response
 
 
 @login_required
@@ -738,7 +754,21 @@ def beneficiaryExcelView(request):
 
 @login_required
 def beneficiaryPdfView(request):
-    return something
+    data = Beneficiary.objects.all()
+
+    html_string = render_to_string(
+        'accounts/beneficiary_pdf.html',
+        {'data_list': data}
+    )
+
+    html = HTML(string=html_string)
+    pdf = html.write_pdf()
+
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="beneficiaries.pdf"'
+
+    return response
+
 
 def beneficiaryDetailView(request,pk):
     if request.method == 'GET':

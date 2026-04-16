@@ -48,7 +48,7 @@ urlpatterns = [
     re_path(r'transactionList(?P<pk>\d+)', transactionListView, name='transactionList'),
     re_path(r'transactionAdd', transactionAddView, name='transactionAdd'),
     re_path(r'transactionExcel(?P<pk>\d+)', transactionExcelView, name='transactionExcel'),
-    re_path(r'transactionPDF', transactionPdfView, name='transactionPdf'),
+    re_path(r'^transactionPdf/(?P<pk>\d+)/$', transactionPdfView, name='transactionPdf'),
     re_path(r'transactionUpd(?P<pk>\d+)', transactionUpdView, name='transactionUpd'),
     re_path(r'transactionDel(?P<pk>\d+)', transactionDelView, name='transactionDel'),
 
