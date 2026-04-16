@@ -36,9 +36,9 @@
                         <button onclick="exportExcel()" class="btn btn-secondary btn-sm mt-2">
                             Export to Excel
                         </button>
-                        <a href="{% url 'accounts:transactionPdf' %}" class="btn btn-secondary btn-sm mt-2">Export to PDF</a>
+                        <a href="{% url 'accounts:transactionPdf' pk=pk %}" class="btn btn-secondary btn-sm mt-2">Export to PDF</a>
                         {% endif %}
-                        </div>    
+                    </div>    
                 </div>
                 
             </div>

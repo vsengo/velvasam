@@ -37,6 +37,9 @@ from django.http import HttpResponse
 from openpyxl import Workbook
 from .models import Transaction
 
+from django.template.loader import render_to_string
+from weasyprint import HTML
+
 class SignUpView(generic.CreateView):
     form_class = RegisterForm
     success_url = reverse_lazy('accounts:login')
@@ -509,8 +512,21 @@ def transactionExcelView(request, pk):
     return response
 
 @login_required
-def transactionPdfView(request):
-    return something
+def transactionPdfView(request, pk):    
+    transaction_list, _ = get_transactions_by_project(pk)
+
+    html_string = render_to_string(
+        'accounts/transaction_pdf.html',
+        {'data_list': transaction_list}
+    )
+
+    html = HTML(string=html_string)
+    pdf = html.write_pdf()
+
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="transactions.pdf"'
+
+    return response
 
 
 @login_required
@@ -696,7 +712,64 @@ def beneficiaryListView(request):
         print('userRole :'+userRole)
         context={ 'data_list':data_list, 'userRole':userRole}
         return render(request = request,template_name = "beneficiary_list.html",context=context)
+
+
+def beneficiaryExcelView(request):
+    user = User.objects.get(id=request.user.id)
+    if request.method == 'GET':
+        try:
+            data_list = Beneficiary.objects.all().exclude(id=14).order_by('-updatedOn')
+        except Exception:
+            # fallback if updatedOn field doesn't exist
+            data_list = Beneficiary.objects.all().exclude(id=14).order_by('-id')
     
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Beneficiaries"
+
+    ws.append([
+        "ID", "Name", "Recomender", "Category",
+        "School", "Grade", "Amount"
+    ])       
+
+    for b in data_list:
+        ws.append([
+            b.id,
+            b.name,
+            b.recommender,
+            b.category,
+            b.school,
+            b.grade,
+            float(b.amount)
+        ])
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response['Content-Disposition'] = 'attachment; filename=beneficiaries.xlsx'
+
+    wb.save(response)
+    return response
+
+@login_required
+def beneficiaryPdfView(request):
+    data = Beneficiary.objects.all()
+
+    html_string = render_to_string(
+        'accounts/beneficiary_pdf.html',
+        {'data_list': data}
+    )
+
+    html = HTML(string=html_string)
+    pdf = html.write_pdf()
+
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="beneficiaries.pdf"'
+
+    return response
+
+
 def beneficiaryDetailView(request,pk):
     if request.method == 'GET':
         beneficiary = Beneficiary.objects.filter(id=pk).first()
