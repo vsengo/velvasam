@@ -36,7 +36,10 @@
                         <button onclick="exportExcel()" class="btn btn-secondary btn-sm mt-2">
                             Export to Excel
                         </button>
-                        <a href="{% url 'accounts:transactionPdf' pk=pk %}" class="btn btn-secondary btn-sm mt-2">Export to PDF</a>
+                        {% comment %} <a href="{% url 'accounts:transactionPdf' pk=pk %}" class="btn btn-secondary btn-sm mt-2">Export to PDF</a>{% endcomment %}
+                        <button onclick="exportPdf()" class="btn btn-secondary btn-sm mt-2"> 
+                            Export to Pdf
+                        </button>
                         {% endif %}
                     </div>    
                 </div>
@@ -160,6 +163,21 @@ function exportExcel() {
         a.click();
 
         alert("Export successful ✅");
+    });
+}
+</script>
+<script>
+function exportPdf() {
+    fetch("{% url 'accounts:transactionPdf' pk=pk %}")
+    .then(response => response.blob())
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "transactions.pdf";
+        a.click();
+
+        alert("Export to Pdf successful ✅");
     });
 }
 </script>

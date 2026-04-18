@@ -226,6 +226,56 @@ def projectListView(request):
         return render(request = request,template_name = "project_list.html",context={'project_list':projects, 'userRole':userRole})
 
 @login_required
+def projectExcelView(request):
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Projects"
+
+    ws.append([
+        "ID", "Project Name", "StartDate", "status",
+        "Raised Fund", "Spent Fund", "BALANCE"
+    ])
+
+    # ✅ reuse logic
+    projects = Project.objects.exclude(status=Project.COMPLETED).order_by('-updatedOn')
+
+    for p in projects:
+        ws.append([
+            p.id,
+            p.name,
+            p.startDate,
+            p.status,
+            p.raisedFund,
+            p.spentFund,
+            p.balance
+        ])
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response['Content-Disposition'] = 'attachment; filename=projects.xlsx'
+
+    wb.save(response)
+    return response
+
+@login_required
+def projectPdfView(request):
+    data = Project.objects.exclude(status=Project.COMPLETED).order_by('-updatedOn')
+
+    html_string = render_to_string(
+        'accounts/project_pdf.html',
+        {'data_list': data}
+    )
+
+    html = HTML(string=html_string)
+    pdf = html.write_pdf()
+
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="projects.pdf"'
+
+    return response
+
+@login_required
 def projectClosedListView(request):
     if request.method == 'GET':
         projects = Project.objects.filter(status=Project.COMPLETED)

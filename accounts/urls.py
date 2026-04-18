@@ -8,7 +8,7 @@ from .views import bankAccountListView, bankAccountAddView, bankAccountDelView, 
 from .views import bankAccountSummary, deleteMember, pwdResetInstruction, beneficiaryListView
 from .views import getTransactions, transactionAllView, beneficiaryAddView, beneficiaryDelView,beneficiaryUpdView
 from .views import beneficiaryDetailView, projectClosedListView, beneficiaryTableView, getBeneficiary, beneficiaryExcelView, beneficiaryPdfView
-from .views import projectTableView, getProject, prjStatusAddView, prjStatusDelView, prjStatusListView, prjStatusUpdView
+from .views import projectTableView, getProject, prjStatusAddView, prjStatusDelView, prjStatusListView, prjStatusUpdView, projectPdfView,  projectExcelView
 from django.urls import path
 from . import views
 
@@ -34,6 +34,8 @@ urlpatterns = [
 
     re_path(r'projectClosedList', projectClosedListView, name='projectClosedList'),
     re_path(r'projectList', projectListView, name='projectList'),
+    re_path(r'projectExcel', projectExcelView, name='projectExcel'),
+    re_path(r'projectPdf', projectPdfView, name='projectPdf'),
     re_path(r'projectAdd', projectAddView, name='projectAdd'),
     re_path(r'projectDel(?P<pk>\d+)', projectDelView, name='projectDel'),
     re_path(r'projectUpd(?P<pk>\d+)', ProjectUpd.as_view(), name='projectUpd'),
