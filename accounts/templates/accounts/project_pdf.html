@@ -3,7 +3,7 @@
 <head>
     <style>
         @page {
-            size: A4;
+            size: A4 landscape;
             margin: 8mm;
 
             @bottom-right {
@@ -21,30 +21,31 @@
 </head>
 <body>
 
-<h2>Beneficiaries Report</h2>
+<h2>Projects Report</h2>
 
 <table>
     <thead>
         <tr>
             <th>#</th>
-            <th>Name</th>
-            <th>Recommender</th>
-            <th>Category</th>
-            <th>School</th>
-            <th>Grade</th>
-            <th>Amount</th>
+            <th>Project Name</th>
+            <th>Start Date</th>
+            <th>Status</th>
+            <th>Total Fund</th>
+            <th>Total Donate</th>
+            <th>BALANCE</th>
         </tr>
     </thead>
     <tbody>
-        {% for data in data_list %}
+
+        {% for project in data_list %}
         <tr>
-            <td>{{ forloop.counter }}</td>
-            <td>{{ data.name }}</td>
-            <td>{{ data.recommender }}</td>
-            <td>{{ data.category }}</td>
-            <td>{{ data.school }}</td>
-            <td>{{ data.grade }}</td>
-            <td>{{ data.amount|floatformat:"-3g" }}</td>
+            <td>{{forloop.counter}}</td>
+            <td>{{project.name}}</td>
+            <td>{{project.startDate}}</td>
+            <td>{{project.status}}</td>
+            <td>{{project.raisedFund|floatformat:"-3g"}}</td>
+            <td>{{project.spentFund|floatformat:"-3g"}}</td>
+            <td>{{project.balance|floatformat:"-3g"}}</td>
         </tr>
         {% endfor %}
     </tbody>

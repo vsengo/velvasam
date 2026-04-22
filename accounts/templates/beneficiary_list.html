@@ -35,8 +35,10 @@
                         <button onclick="exportExcel()" class="btn btn-secondary btn-md">
                             Export to Excel
                         </button>    
-                        <a href="{% url 'accounts:beneficiaryPdf'  %}" class="btn btn-secondary btn-md">Export to PDF</a>           
-                        
+                        {% comment %} <a href="{% url 'accounts:beneficiaryPdf'  %}" class="btn btn-secondary btn-md">Export to PDF</a>            {% endcomment %}
+                        <button onclick="exportPdf()" class="btn btn-secondary btn-md">
+                            Export to Pdf
+                        </button>  
                     </div>
                 </div>
             </div>
@@ -65,7 +67,7 @@
                         <td>{{data.category}} </td>
                         <td>{{data.school}}</td>
                         <td>{{data.grade}}</td>
-                        <td>{{data.amount}}</td>
+                        <td>{{data.amount|floatformat:"-3g"}}</td>
                         <td><a href="{% url 'accounts:beneficiaryDetail' data.id %}" class="btn btn-danger btn-md">Detail</a>
                        
                         {% if userRole == 'EDIT' %}
@@ -115,6 +117,24 @@ function exportExcel() {
     });
 }
 </script>
+
+<script>
+function exportPdf() {
+    fetch("{% url 'accounts:beneficiaryPdf' %}")
+    .then(response => response.blob())
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "beneficiaries.pdf";
+        a.click();
+
+        alert("Export successful ✅");
+    });
+}
+</script>
+
+
 
 {% include 'home/footer.html' %}
 {% endblock content %}
