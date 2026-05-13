@@ -446,6 +446,7 @@ def minuteDelView(request,pk):
 
 @login_required
 def transactionAllView(request):
+    print("transactionAllView user="+str(request.user.id))
     user = User.objects.get(id=request.user.id)
     userRole = getUserRole(user,'transaction')
     return render(request, 'transactionAll.html', {'userRole': userRole})
@@ -462,17 +463,23 @@ def getTransactions(request):
 
 @login_required
 def transactionListView(request, pk):
+    print("transactionListView user="+str(request.user.id))
     user = User.objects.get(id=request.user.id)
     userRole = getUserRole(user,'transaction')
 
     tx, project_name = get_transactions_by_project(pk)
+    
+    print("tx=" + str(tx))
+    print("userRole=" + userRole)
+    print("project_name=" + project_name)
+    print("pk=" + str(pk))
 
     return render(request, "transaction_list.html", {
         "transaction_list": tx,
         "userRole": userRole,
         "project_name": project_name,
         "pk": pk
-})
+    })
     
 @login_required 
 def transactionAddView(request):
@@ -522,6 +529,10 @@ def get_transactions_by_project(pk):
         project_name = Project.objects.get(id=pk).name
 
     return tx, project_name
+
+#add a function to calc bank balance for each transactions
+#mark deleted transactions
+
 
 @login_required
 def transactionExcelView(request, pk):

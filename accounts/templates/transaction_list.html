@@ -1,186 +1,205 @@
 {% extends 'home/base.html' %}
 {% block content %}
 
-<script type="text/javascript">
-    function confirmDeleteModal(id){
-        $('#delete_confirm_form').attr('action',"/accounts/transactionDel"+id);
-        $('#deleteUserModal').modal('show');
-    };    
+<script>
+function confirmDeleteModal(id){
+    document.getElementById('delete_confirm_form')
+        .setAttribute('action', "/accounts/transactionDel" + id);
+    new bootstrap.Modal(document.getElementById('deleteUserModal')).show();
+}
 </script>
 
-{% if userRole == 'NONE' %}
 <div class="container-fluid">
-    <div class="row text-center justify-content-center">
-            <div class="card mt-2 mb-2">
-            <div class="card-header">
-                <div class="row">
-                    <div class="col-sm-12">
-                        Unauthorized to view the content
-                    </div>
+
+    <!-- HEADER -->
+    {% if userRole == 'NONE' %}
+        <div class="text-center mt-3">
+            <div class="card">
+                <div class="card-body">
+                    Unauthorized to view the content
                 </div>
             </div>
-            </div>
-    </div>
-</div>
-{% else %}
-<div class="container-fluid">
-    <div class="row text-center justify-content-center">
-            <div class="card mt-2 mb-2">
+        </div>
+    {% else %}
+
+        <div class="card mt-2 mb-3 text-center">
             <div class="card-header">
-                <div class="row">
-                    <div class="col-sm-12">
-                        <strong>Project: {{project_name}}</strong><br>
-                        {% if userRole == 'EDIT' %}
-                        <a href="{% url 'accounts:transactionAdd' %}" class="btn btn-secondary btn-sm mt-2">Add Transaction</a>
-                        {% comment %} <a href="{% url 'accounts:transactionExcel' pk=pk %}" class="btn btn-secondary btn-sm mt-2">Export to Excel</a> {% endcomment %}
-                        <button onclick="exportExcel()" class="btn btn-secondary btn-sm mt-2">
-                            Export to Excel
-                        </button>
-                        {% comment %} <a href="{% url 'accounts:transactionPdf' pk=pk %}" class="btn btn-secondary btn-sm mt-2">Export to PDF</a>{% endcomment %}
-                        <button onclick="exportPdf()" class="btn btn-secondary btn-sm mt-2"> 
-                            Export to Pdf
-                        </button>
-                        {% endif %}
-                    </div>    
-                </div>   
+                <strong>Project: {{ project_name }}</strong><br>
+
+                {% if userRole == 'EDIT' %}
+                    <a href="{% url 'accounts:transactionAdd' %}" 
+                       class="btn btn-secondary btn-sm mt-2">
+                        Add Transaction
+                    </a>
+
+                    <button onclick="exportExcel()" class="btn btn-secondary btn-sm mt-2">
+                        Export Excel
+                    </button>
+
+                    <button onclick="exportPdf()" class="btn btn-secondary btn-sm mt-2">
+                        Export PDF
+                    </button>
+                {% endif %}
             </div>
-            <div class="d-lg-none">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-sm-12">
-                            <div class="toast-container p-0" role="alert" aria-live="assertive" aria-atomic="true">
-                                {% for tx in transaction_list %}
-                                <div class="toast show mb-3 w-90">
-                                    <div class="toast-header text-white bg-secondary">
-                                        <strong class="me-auto">{{ tx.date }} | {{ tx.txType }}</strong> 
-                                        {% if userRole == 'EDIT' %}
-                                            <button type="button"><a href="{% url 'accounts:transactionUpd' tx.id %}">Edit</a></button>
-                                            <button type="button" data-bs-toggle="modal" onclick="confirmDeleteModal('{{tx.id}}')" id="deleteID">
-                                                Delete
-                                            </button>
-                                        {% endif %}
+        </div>
+
+        <!-- MOBILE VIEW -->
+        <div class="d-lg-none">
+            <div class="row">
+                <div class="col-12">
+                    {% for tx in transaction_list %}
+                        <div class="card mb-3">
+                            <div class="card-header bg-secondary text-white">
+                                <strong>{{ tx.date }} | {{ tx.txType }}</strong>
+
+                                {% if userRole == 'EDIT' %}
+                                    <div class="mt-2">
+                                        <a href="{% url 'accounts:transactionUpd' tx.id %}" 
+                                           class="btn btn-light btn-sm">
+                                            Edit
+                                        </a>
+
+                                        <button class="btn btn-warning btn-sm"
+                                                onclick="confirmDeleteModal('{{ tx.id }}')">
+                                            Delete
+                                        </button>
                                     </div>
-                                    <div class="toast-body bg-light text-fw-light">
-                                        <p class="mb-1"><strong>Account:</strong> {{ tx.bank.name }}</p>          
-                                        <p class="mb-1"><strong>Project:</strong> {{ tx.project.name }}</p>
-                                        <p class="mb-1"><strong>Beneficiary:</strong> {{ tx.beneficiary.name }}</p>
-                                        <p class="mb-1"><strong>Expense:</strong> {{ tx.exType }}</p>
-                                        <p class="mb-1"><strong>Amount:</strong> {{ tx.amount|floatformat:"-3g" }}</p>
-                                        <p class="mb-1"><strong>Status:</strong> {{ tx.confirmed }}</p>
-                                        <p class="mb-1"><strong>Owner:</strong> {{ tx.owner.first_name }} {{ tx.owner.last_name }}</p>
-                                        <p class="mb-1"><strong>Remarks:</strong> {{ tx.remarks }}</p>
-                                    </div>
-                                </div>
-                                {% endfor %}
+                                {% endif %}
+                            </div>
+
+                            <div class="card-body">
+                                <p><strong>Account:</strong> {{ tx.bank.name }}</p>
+                                <p><strong>Project:</strong> {{ tx.project.name }}</p>
+                                <p><strong>Beneficiary:</strong> {{ tx.beneficiary.name }}</p>
+                                <p><strong>Expense:</strong> {{ tx.exType }}</p>
+                                <p><strong>Amount:</strong> {{ tx.amount|floatformat:"-3g" }}</p>
+                                <p><strong>Status:</strong> {{ tx.confirmed }}</p>
+                                <p><strong>Owner:</strong> {{ tx.owner.first_name }} {{ tx.owner.last_name }}</p>
+                                <p><strong>Remarks:</strong> {{ tx.remarks }}</p>
                             </div>
                         </div>
-                        <div class="d-none d-lg-block">
-                          <div class="table-responsive">
-                            <table class="table table-striped table-hover table-sm">
-                              <thead>
-                                  <tr>
-                                      <th scope="col">#</th>
-                                      <th scope="col">Account</th>
-                                      <th scope="col" class="d-none d-sm-table-cell">Project</th>
-                                      <th scope="col" class="d-none d-md-table-cell">Beneficiary</th>
-                                      <th scope="col">Action</th>
-                                      <th scope="col" class="d-none d-md-table-cell">Expense</th>
-                                      <th scope="col">Amount</th>
-                                      <th scope="col">Date</th>
-                                      <th scope="col" class="d-none d-lg-table-cell">Remarks</th>
-                                      <th scope="col">Status</th>
-                                      <th scope="col" class="d-none d-lg-table-cell">Name</th>
-                                      {% if userRole == 'EDIT' %}
-                                      <th scope="col">Update</th>
-                                      <th scope="col">Delete</th>
-                                      {% endif %} 
-                                  </tr>
-                              </thead>
-                              <tbody>
-                                 {% for tx in transaction_list %}
-                                  <tr>
-                                      <th scope="row">{{forloop.counter}}</th>
-                                      <td>{{tx.bank.name}}</td>
-                                      <td class="d-none d-sm-table-cell">{{tx.project.name}}</td>
-                                      <td class="d-none d-md-table-cell">{{tx.beneficiary.name}}</td>
-                                      <td>{{tx.txType}}</td>
-                                      <td class="d-none d-md-table-cell">{{tx.exType}}</td>
-                                      <td>{{tx.amount|floatformat:"-3g"}}</td>
-                                      <td>{{tx.date}}</td>
-                                      <td class="d-none d-lg-table-cell text-wrap">{{tx.remarks}}</td>
-                                      <td>{{tx.confirmed}}</td>
-                                      <td class="d-none d-lg-table-cell">{{tx.owner.first_name}} {{tx.owner.last_name}}</td>
-                                      {% if userRole == 'EDIT' %}
-                                      <td><a href="{% url 'accounts:transactionUpd' tx.id %}" class="btn btn-danger btn-sm mb-1">Edit</a></td>
-                                      <td>
-                                          <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" onclick="confirmDeleteModal('{{tx.id}}')" id="deleteID">
-                                              Delete
-                                          </button> 
-                                      </td>
-                                      {% endif %} 
-                                  </tr>
-                                  {% endfor %}
-                              </tbody>
-                            </table>
-                        </div>
-                          </div>
-                        </div>
-                        </div>
+                    {% endfor %}
                 </div>
-                <hr>
             </div>
         </div>
-    </div>
 
-    <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-           <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" style="color:red">Confirm you want to Delete the record.</h5>
-                    <form id="delete_confirm_form" method="post">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-warning mr-1" data-dismiss="modal">DELETE</button>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <p class="modal-title">Click outside this box to Cancel.</p>
-                </div>
-           </div> 
+        <!-- DESKTOP VIEW -->
+        <div class="d-none d-lg-block">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-sm">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Account</th>
+                            <th>Project</th>
+                            <th>Beneficiary</th>
+                            <th>Action</th>
+                            <th>Expense</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Remarks</th>
+                            <th>Status</th>
+                            <th>Name</th>
+                            {% if userRole == 'EDIT' %}
+                                <th>Edit</th>
+                                <th>Delete</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for tx in transaction_list %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ tx.bank.name }}</td>
+                            <td>{{ tx.project.name }}</td>
+                            <td>{{ tx.beneficiary.name }}</td>
+                            <td>{{ tx.txType }}</td>
+                            <td>{{ tx.exType }}</td>
+                            <td>{{ tx.amount|floatformat:"-3g" }}</td>
+                            <td>{{ tx.date }}</td>
+                            <td>{{ tx.remarks }}</td>
+                            <td>{{ tx.confirmed }}</td>
+                            <td>{{ tx.owner.first_name }} {{ tx.owner.last_name }}</td>
+
+                            {% if userRole == 'EDIT' %}
+                                <td>
+                                    <a href="{% url 'accounts:transactionUpd' tx.id %}" 
+                                       class="btn btn-danger btn-sm">
+                                        Edit
+                                    </a>
+                                </td>
+                                <td>
+                                    <button class="btn btn-primary btn-sm"
+                                            onclick="confirmDeleteModal('{{ tx.id }}')">
+                                        Delete
+                                    </button>
+                                </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    {% endif %}
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="text-danger">
+                    Confirm deletion
+                </h5>
+            </div>
+
+            <div class="modal-body">
+                Are you sure you want to delete this record?
+            </div>
+
+            <div class="modal-footer">
+                <form id="delete_confirm_form" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning">
+                        DELETE
+                    </button>
+                </form>
+            </div>
+
         </div>
     </div>
- </div>
-{% endif %}
+</div>
 
+<!-- EXPORT SCRIPTS -->
 <script>
 function exportExcel() {
     fetch("{% url 'accounts:transactionExcel' pk=pk %}")
-    .then(response => response.blob())
+    .then(r => r.blob())
     .then(blob => {
-        const url = window.URL.createObjectURL(blob);
+        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = "transactions.xlsx";
         a.click();
-
-        alert("Export successful ✅");
     });
 }
-</script>
-<script>
+
 function exportPdf() {
     fetch("{% url 'accounts:transactionPdf' pk=pk %}")
-    .then(response => response.blob())
+    .then(r => r.blob())
     .then(blob => {
-        const url = window.URL.createObjectURL(blob);
+        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = "transactions.pdf";
         a.click();
-
-        alert("Export to Pdf successful ✅");
     });
 }
 </script>
-                      
+
 {% include 'home/footer.html' %}
-{% endblock content %}
+{% endblock %}

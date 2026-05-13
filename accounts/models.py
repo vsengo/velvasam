@@ -116,7 +116,9 @@ class BankAccount(models.Model):
     balance = models.DecimalField(max_digits=12,decimal_places=2,default=0.0)  
     updatedBy = models.ForeignKey(User,on_delete=models.CASCADE)
     updatedOn = models.DateTimeField(default=timezone.now)
-
+    # to add currency
+    #currency = models.CharField(max_length=3, default='LKL')
+    
     def __str__(self):
         return "%s" % (self.name)
 
@@ -181,6 +183,10 @@ class Transaction(models.Model):
     confirmed = models.CharField(max_length=16,choices=TXCONFIRM,default='UnConfirmed')
     updatedBy = models.ForeignKey(User,on_delete=models.PROTECT)
     updatedOn = models.DateTimeField(default=timezone.now)
+    
+    #to add amount LKL local currency
+    #amount_local, default is 0 (optional), both to be displayed in all places  
+
 
 
 class ProjectStatus(models.Model):
