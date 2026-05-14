@@ -26,24 +26,21 @@
             <div class="card mt-2 mb-2">
             <div class="card-header">
                 <div class="row">
-                    <div class="col-sm-6">
-                        {% if userRole == 'EDIT' %}
-                         <a href="{% url 'accounts:projectAdd'  %}" class="btn btn-secondary btn-md">Add Project</a>
-                        {% endif %}
-                        <a href="{% url 'accounts:projectTable'  %}" class="btn btn-secondary btn-md">View Projects</a>
-                        <button onclick="exportExcel()" class="btn btn-secondary btn-md">
-                            Export to Excel
-                        </button>
-                        <button onclick="exportPdf()" class="btn btn-secondary btn-md">
-                            Export to Pdf
-                        </button>
+                    <div class="col-12 col-md-12">
+                        <div class="d-grid gap-2 d-md-flex justify-content-center">
+                            {% if userRole == 'EDIT' %}
+                            <a href="{% url 'accounts:projectAdd'  %}" class="btn btn-secondary btn-md">Add Project</a>
+                            {% endif %}
+                            <a href="{% url 'accounts:projectTable'  %}" class="btn btn-secondary btn-md">View Projects</a>
+                            <button onclick="exportExcel()" class="btn btn-secondary btn-md">
+                                Export to Excel
+                            </button>
+                            <button onclick="exportPdf()" class="btn btn-secondary btn-md">
+                                Export to Pdf
+                            </button>
+                        </div>
                     </div>
-                    <div class="col-sm-6">
-                   </div>
-                    </div>
-                    <div class="col-sm-6">
-                        
-                    </div>
+                    
                 </div>
             </div>
 

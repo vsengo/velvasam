@@ -23,23 +23,23 @@ function confirmDeleteModal(id){
     {% else %}
 
         <div class="card mt-2 mb-3 text-center">
-            <div class="card-header">
-                <strong>Project: {{ project_name }}</strong><br>
-
-                {% if userRole == 'EDIT' %}
-                    <a href="{% url 'accounts:transactionAdd' %}" 
-                       class="btn btn-secondary btn-sm mt-2">
-                        Add Transaction
-                    </a>
-
-                    <button onclick="exportExcel()" class="btn btn-secondary btn-sm mt-2">
-                        Export Excel
-                    </button>
-
-                    <button onclick="exportPdf()" class="btn btn-secondary btn-sm mt-2">
-                        Export PDF
-                    </button>
-                {% endif %}
+            <div class="card-header">                
+                <strong>Project: {{ project_name }}</strong>
+                <div class="col-12 col-md-12">
+                    <div class="d-grid gap-2 d-md-flex justify-content-center">
+                        {% if userRole == 'EDIT' %}
+                            <a href="{% url 'accounts:transactionAdd' %}" class="btn btn-secondary btn-md">
+                                Add Transaction
+                            </a>
+                            <button onclick="exportExcel()" class="btn btn-secondary btn-md">
+                                Export Excel
+                            </button>
+                            <button onclick="exportPdf()" class="btn btn-secondary btn-md">
+                                Export PDF
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
 
