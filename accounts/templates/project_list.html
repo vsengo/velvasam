@@ -48,46 +48,120 @@
             </div>
 
             <div class="card-body">
-                {% for project in project_list %}
-                <div class="row">
-                    <div class="col-md-9 col-lg-4" align="left">
-                        <div class="alert alert-danger text-left justify-content-left">
-                            <p>
-                                <strong>{{forloop.counter}}. {{project.name}}</strong>     
-                                <i>(Started On:{{project.startDate}} {{project.status}})</i>  
-                                <ul>
-                                    <li>Total Fund     :{{project.raisedFund|floatformat:"-3g"}}</li>
-                                    <li>Total Donated  :{{project.spentFund|floatformat:"-3g"}}</li>
-                                    <li>BALANCE        :{{project.balance|floatformat:"-3g"}}</li>
+                <!-- ================= DESKTOP VIEW ================= -->
+                <div class="d-none d-md-block">
+                    {% for project in project_list %}
+                    <div class="row align-items-stretch mb-3">
+
+                        <!-- LEFT -->
+                        <div class="col-lg-4">
+                            <div class="alert alert-danger h-100">
+                                <strong>{{forloop.counter}}. {{project.name}}</strong><br>
+                                <small>(Started: {{project.startDate}} | {{project.status}})</small>
+
+                                <ul class="mt-2 mb-0">
+                                    <li>Total Fund: {{project.raisedFund|floatformat:"-3g"}}</li>
+                                    <li>Total Donated: {{project.spentFund|floatformat:"-3g"}}</li>
+                                    <li><strong>Balance: {{project.balance|floatformat:"-3g"}}</strong></li>
                                 </ul>
-                            </p>
+                            </div>
                         </div>
 
-                        <div class="alert alert-light text-left justify-content-left">
-                       
+                        <!-- MIDDLE -->
+                        <div class="col-lg-5">
+                            <div class="alert alert-info h-100">
+                                <strong>Objective:</strong><br>
+                                {{project.purpose|linebreaks}}
+                            </div>
                         </div>
-                    </div>
-                     <div class="col-md-9 col-lg-5" align="left">
-                        <div class="alert alert-info text-left justify-content-left">
-                            <strong>Objective :</strong> {{project.purpose|linebreaks}}
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-lg-3" align="left">
-                        <div class="alert alert-dark text-left justify-content-left">
-                            <a href="{% url 'accounts:transactionList' project.id %}" class="btn btn-secondary btn-sm">View Transactions</a><br>
-                            {% if userRole == 'EDIT' %}
-                                <a href="{% url 'accounts:projectUpd' project.id %}" class="btn btn-secondary btn-sm">Update Project</a><br>
-                                <a href="{% url 'accounts:prjStatusList' project.id %}" class="btn btn-secondary btn-sm">Status</a><br>
-                                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" onclick="confirmDeleteModal('{{project.id}}')" id="deleteID">
-                                    Close
+
+                        <!-- RIGHT -->
+                        <div class="col-lg-3">
+                            <div class="alert alert-dark h-100 d-flex flex-column align-items-center">
+
+                                <a href="{% url 'accounts:transactionList' project.id %}"
+                                class="btn btn-secondary btn-sm w-100 mb-2 text-center">
+                                    View Transactions
+                                </a>
+
+                                {% if userRole == 'EDIT' %}
+                                <a href="{% url 'accounts:projectUpd' project.id %}"
+                                class="btn btn-secondary btn-sm w-100 mb-2 text-center">
+                                    Update
+                                </a>
+
+                                <a href="{% url 'accounts:prjStatusList' project.id %}"
+                                class="btn btn-secondary btn-sm w-100 mb-2 text-center">
+                                    Status
+                                </a>
+
+                                <button class="btn btn-outline-danger btn-sm w-100 mb-2 text-center"
+                                        onclick="confirmDeleteModal('{{project.id}}')">
+                                    Close Project
                                 </button>
-                            {% endif %}    
+                                {% endif %}
+
+                            </div>
+                        </div>
+
+                    </div>
+                    {% endfor %}
+                </div>
+
+
+                <!-- ================= MOBILE VIEW ================= -->
+                <div class="d-block d-md-none">
+                    {% for project in project_list %}
+                    <div class="card mb-3 shadow-sm">
+
+                        <div class="card-body bg-danger bg-opacity-10">
+
+                            <h5 class="card-title">
+                                {{forloop.counter}}. {{project.name}}
+                            </h5>
+
+                            <p class="text-muted mb-2">
+                                {{project.startDate}} | {{project.status}}
+                            </p>
+
+                            <ul class="small">
+                                <li>Total Fund: {{project.raisedFund|floatformat:"-3g"}}</li>
+                                <li>Total Donated: {{project.spentFund|floatformat:"-3g"}}</li>
+                                <li><strong>Balance: {{project.balance|floatformat:"-3g"}}</strong></li>
+                            </ul>
+
+                            
+                                <div class="p-2 mb-2 objective-bg rounded">
+                                    <strong>Objective:</strong><br>
+                                    {{project.purpose|truncatewords:25}}
+                                </div>
+                            
+                            <div class="p-2 mb-2 rounded actions-bg">
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'accounts:transactionList' project.id %}" class="btn btn-secondary btn-sm w-100">
+                                    View Transactions
+                                </a>
+
+                                {% if userRole == 'EDIT' %}
+                                <a href="{% url 'accounts:projectUpd' project.id %}" class="btn btn-secondary btn-sm w-100">
+                                    Update
+                                </a>
+
+                                <a href="{% url 'accounts:prjStatusList' project.id %}" class="btn btn-secondary btn-sm w-100">
+                                    Status
+                                </a>
+
+                                <button class="btn btn-outline-danger btn-sm w-100 mb-2 text-center"
+                                        onclick="confirmDeleteModal('{{project.id}}')">
+                                    Close Project
+                                </button>
+                                {% endif %}
+                            </div>
+                            </div>
                         </div>
                     </div>
+                    {% endfor %}
                 </div>
-                <hr>
-                {% endfor %}
-
             </div>
         </div>
     </div>

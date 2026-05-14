@@ -172,7 +172,6 @@ def getUserRole(user,table):
         userRole='EDIT'
     elif user.has_perm('accounts.view_'+table):
         userRole='VIEW'
-    print('table :'+table+' '+userRole)
    
     return userRole
 
@@ -446,7 +445,6 @@ def minuteDelView(request,pk):
 
 @login_required
 def transactionAllView(request):
-    print("transactionAllView user="+str(request.user.id))
     user = User.objects.get(id=request.user.id)
     userRole = getUserRole(user,'transaction')
     return render(request, 'transactionAll.html', {'userRole': userRole})
@@ -463,16 +461,10 @@ def getTransactions(request):
 
 @login_required
 def transactionListView(request, pk):
-    print("transactionListView user="+str(request.user.id))
     user = User.objects.get(id=request.user.id)
     userRole = getUserRole(user,'transaction')
 
     tx, project_name = get_transactions_by_project(pk)
-    
-    print("tx=" + str(tx))
-    print("userRole=" + userRole)
-    print("project_name=" + project_name)
-    print("pk=" + str(pk))
 
     return render(request, "transaction_list.html", {
         "transaction_list": tx,
