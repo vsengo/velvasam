@@ -61,6 +61,7 @@
                         <td>{{bank.holder.first_name}} {{bank.holder.last_name}}</td>
                         <td>{{bank.balance}}</td>
                         <td>{{bank.updatedOn}}</td>
+                        <td>{{bank.currency}}</td>
                         {% if userRole == 'EDIT' %}
                         <td><a href="{% url 'accounts:bankAccountUpd' bank.id %}" class="btn btn-danger btn-md">Edit</a></td>
                         <td>

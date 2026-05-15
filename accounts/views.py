@@ -534,7 +534,7 @@ def transactionExcelView(request, pk):
 
     ws.append([
         "ID", "Account", "Project", "Beneficiary",
-        "Action", "Expense", "Amount", "Date",
+        "Action", "Expense", "Amount", "AmountLocal","Date",
         "Status", "Owner", "Remarks"
     ])
 
@@ -550,6 +550,7 @@ def transactionExcelView(request, pk):
             str(t.txType),
             str(t.exType),
             float(t.amount),
+            float(t.amountLocal),
             t.date.strftime("%Y-%m-%d"),
             t.confirmed,
             f"{t.owner.first_name} {t.owner.last_name}",
@@ -833,7 +834,7 @@ def beneficiaryDetailView(request,pk):
 def calcFinanceReport():
     transaction = read_frame(Transaction.objects.all())
     txs = transaction.loc[:,['txType','date','amount']]
-    txs['year'] = DateUtils.cv2Year(txs['date'])
+    txs['year'] = DateUtil.cv2Year(txs['date'])
     
     px = txs.groupby(['txType']).sum().reset_index()
     px.fillna(0)

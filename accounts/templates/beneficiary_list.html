@@ -68,7 +68,7 @@
                         <th>Category</th>
                         <th>School</th>
                         <th>Grade</th>
-                        <th>Amount</th>       
+                        <th>Amount</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -84,7 +84,6 @@
                         <td>{{data.amount|floatformat:"-3g"}}</td>
                         <td>
                             <a href="{% url 'accounts:beneficiaryDetail' data.id %}" class="btn btn-secondary btn-sm">Detail</a>
-
                             {% if userRole == 'EDIT' %}
                             <a href="{% url 'accounts:beneficiaryUpd' data.id %}" class="btn btn-secondary btn-sm">Edit</a>
                             <button class="btn btn-outline-danger btn-sm"
@@ -113,7 +112,7 @@
                     <p class="mb-1"><strong>School:</strong> {{data.school}}</p>
                     <p class="mb-1"><strong>Grade:</strong> {{data.grade}}</p>
                     <p class="mb-2"><strong>Amount:</strong> {{data.amount|floatformat:"-3g"}}</p>
-
+                    
                     <!-- ACTIONS -->
                     <div class="d-grid gap-2">
                         <a href="{% url 'accounts:beneficiaryDetail' data.id %}"
