@@ -18,7 +18,7 @@ Phase 3 (May-June):
 1. Allow multi-currency for transactions
     - Add currency field for Bank class and allow major currencies (USD,GBP,EURO,LKR) in drop down, Default LKR
     - Enhance calculations to show Balance of Bank accounts
-    - Add exchange rate field for transaction default=1. 
+    - Add amounLocal field for transaction default=amount. 
     - Transaction screen to show currency
 2. Update existing data to reflect multi-currency
     - There are few projects have remarks about this information.
