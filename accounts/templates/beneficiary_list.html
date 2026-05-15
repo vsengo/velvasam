@@ -22,81 +22,121 @@
 </div>
 {% else %}   
 <div class="container-fluid">
-    <div class="row text-center justify-content-center">
+    <div class="row text-center">
         <div class="card mt-2 mb-2">
             <div class="card-header">
                 <div class="row">
-                    <div class="col-sm-12">
-                        {% if userRole == 'EDIT' %}
-                         <a href="{% url 'accounts:beneficiaryAdd'  %}" class="btn btn-secondary btn-md">Add Beneficiary</a>
-                        {% endif %}
-                        <a href="{% url 'accounts:beneficiaryTable'  %}" class="btn btn-secondary btn-md">View Beneficiaries</a>              
-                        {% comment %} <a href="{% url 'accounts:beneficiaryExcel'  %}" class="btn btn-secondary btn-md">Export to Excel</a>   {% endcomment %}
-                        <button onclick="exportExcel()" class="btn btn-secondary btn-md">
-                            Export to Excel
-                        </button>    
-                        {% comment %} <a href="{% url 'accounts:beneficiaryPdf'  %}" class="btn btn-secondary btn-md">Export to PDF</a>            {% endcomment %}
-                        <button onclick="exportPdf()" class="btn btn-secondary btn-md">
-                            Export to Pdf
-                        </button>  
+                    <div class="col-12 col-md-12">
+                        <div class="d-grid gap-2 d-md-flex justify-content-center">
+                            {% if userRole == 'EDIT' %}
+                            <a href="{% url 'accounts:beneficiaryAdd' %}"
+                            class="btn btn-secondary">
+                                Add Beneficiary
+                            </a>
+                            {% endif %}
+
+                            <a href="{% url 'accounts:beneficiaryTable' %}"
+                            class="btn btn-secondary">
+                                View Beneficiaries
+                            </a>
+
+                            <button onclick="exportExcel()"
+                                    class="btn btn-secondary">
+                                Export to Excel
+                            </button>
+
+                            <button onclick="exportPdf()"
+                                    class="btn btn-secondary">
+                                Export to Pdf
+                            </button>
+
+                        </div>
                     </div>
+
                 </div>
             </div>
         </div>
    
-        <div class="card mt-2 mb-2">
+        <!-- ================= DESKTOP VIEW ================= -->
+        <div class="card mt-2 mb-2 d-none d-md-block">
             <table class="table table-striped table-hover">
                 <thead>
                     <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">Name</th>
-                        <th scope="col">Recomender</th>
-                        <th scope="col">Category</th>
-                        <th scope="col">School</th>
-                        <th scope="col">Grade</th>
-                        <th scope="col">Amount</th>       
-                        <th scope="col">Actions</th>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Recomender</th>
+                        <th>Category</th>
+                        <th>School</th>
+                        <th>Grade</th>
+                        <th>Amount</th>       
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                   {% for data in data_list %}
+                {% for data in data_list %}
                     <tr>
-                        <th scope"row">{{forloop.counter}}</th>
-                        <td>{{data.name}} </td>
-                        <td>{{data.recommender}} </td>
-                        <td>{{data.category}} </td>
+                        <th>{{forloop.counter}}</th>
+                        <td>{{data.name}}</td>
+                        <td>{{data.recommender}}</td>
+                        <td>{{data.category}}</td>
                         <td>{{data.school}}</td>
                         <td>{{data.grade}}</td>
                         <td>{{data.amount|floatformat:"-3g"}}</td>
-                        <td><a href="{% url 'accounts:beneficiaryDetail' data.id %}" class="btn btn-danger btn-md">Detail</a>
-                       
-                        {% if userRole == 'EDIT' %}
-                        <a href="{% url 'accounts:beneficiaryUpd' data.id %}" class="btn btn-danger btn-md">Edit</a>
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" onclick="confirmDeleteModal('{{data.id}}')" id="deleteID">
-                            Delete
-                        </button> 
+                        <td>
+                            <a href="{% url 'accounts:beneficiaryDetail' data.id %}" class="btn btn-secondary btn-sm">Detail</a>
+
+                            {% if userRole == 'EDIT' %}
+                            <a href="{% url 'accounts:beneficiaryUpd' data.id %}" class="btn btn-secondary btn-sm">Edit</a>
+                            <button class="btn btn-outline-danger btn-sm"
+                                onclick="confirmDeleteModal('{{data.id}}')">
+                                Delete
+                            </button>
+                            {% endif %}
                         </td>
-                        <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                            <div class="modal-dialog">
-                               <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" style="color:red">Confirm you want to Delete the record.</h5>
-                                        <form id="delete_confirm_form" method="post">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-warning mr-1" data-dismiss="modal">DELETE</button>
-                                        </form>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <p class="modal-title">Click outside this box to Cancel.</p>
-                                    </div>
-                               </div> 
-                            </div>
-                        </div>
-                        {% endif %} 
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+        <!-- ================= MOBILE VIEW ================= -->
+        <div class="d-block d-md-none">
+            {% for data in data_list %}
+            <div class="card mb-3 shadow-sm">
+                <div class="card-body">
+
+                    <h5 class="card-title">
+                        {{forloop.counter}}. {{data.name}}
+                    </h5>
+
+                    <p class="mb-1"><strong>Recommender:</strong> {{data.recommender}}</p>
+                    <p class="mb-1"><strong>Category:</strong> {{data.category}}</p>
+                    <p class="mb-1"><strong>School:</strong> {{data.school}}</p>
+                    <p class="mb-1"><strong>Grade:</strong> {{data.grade}}</p>
+                    <p class="mb-2"><strong>Amount:</strong> {{data.amount|floatformat:"-3g"}}</p>
+
+                    <!-- ACTIONS -->
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'accounts:beneficiaryDetail' data.id %}"
+                        class="btn btn-secondary btn-sm w-100 text-center">
+                            Detail
+                        </a>
+
+                        {% if userRole == 'EDIT' %}
+                        <a href="{% url 'accounts:beneficiaryUpd' data.id %}"
+                        class="btn btn-secondary btn-sm w-100 text-center">
+                            Edit
+                        </a>
+
+                        <button class="btn btn-outline-danger btn-sm w-100"
+                                onclick="confirmDeleteModal('{{data.id}}')">
+                            Delete
+                        </button>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+            {% endfor %}
         </div>
     </div>
  </div>

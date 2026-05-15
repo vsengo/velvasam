@@ -172,7 +172,6 @@ def getUserRole(user,table):
         userRole='EDIT'
     elif user.has_perm('accounts.view_'+table):
         userRole='VIEW'
-    print('table :'+table+' '+userRole)
    
     return userRole
 
@@ -472,7 +471,7 @@ def transactionListView(request, pk):
         "userRole": userRole,
         "project_name": project_name,
         "pk": pk
-})
+    })
     
 @login_required 
 def transactionAddView(request):
@@ -522,6 +521,10 @@ def get_transactions_by_project(pk):
         project_name = Project.objects.get(id=pk).name
 
     return tx, project_name
+
+#add a function to calc bank balance for each transactions
+#mark deleted transactions
+
 
 @login_required
 def transactionExcelView(request, pk):
