@@ -25,21 +25,20 @@
     <div class="row text-center justify-content-center">
             <div class="card mt-2 mb-2">
             <div class="card-header">
+                <p fw-bold>Projects</p>
                 <div class="row">
                     <div class="col-12 col-md-12">
-                        <div class="d-grid gap-2 d-md-flex justify-content-center">
                             {% if userRole == 'EDIT' %}
-                            <a href="{% url 'accounts:projectAdd'  %}" class="btn btn-secondary btn-md">Add Project</a>
+                            <a href="{% url 'accounts:projectAdd'  %}" class="btn btn-secondary btn-sm">Add</a>
                             {% endif %}
-                            <a href="{% url 'accounts:projectTable'  %}" class="btn btn-secondary btn-md">View Projects</a>
+                            <a href="{% url 'accounts:projectTable'  %}" class="btn btn-secondary btn-sm">View</a>
                             <button onclick="exportExcel()" class="btn btn-secondary btn-md">
-                                Export to Excel
+                                Excel
                             </button>
-                            <button onclick="exportPdf()" class="btn btn-secondary btn-md">
-                                Export to Pdf
+                            <button onclick="exportPdf()" class="btn btn-secondary btn-sm">
+                                Pdf
                             </button>
                         </div>
-                    </div>
                     
                 </div>
             </div>
@@ -134,26 +133,24 @@
                                 </div>
                             
                             <div class="p-2 mb-2 rounded actions-bg">
-                            <div class="d-grid gap-2">
-                                <a href="{% url 'accounts:transactionList' project.id %}" class="btn btn-secondary btn-sm w-100">
-                                    View Transactions
+                                <a href="{% url 'accounts:transactionList' project.id %}" class="btn btn-secondary btn-sm">
+                                    Transactions
                                 </a>
 
                                 {% if userRole == 'EDIT' %}
-                                <a href="{% url 'accounts:projectUpd' project.id %}" class="btn btn-secondary btn-sm w-100">
+                                <a href="{% url 'accounts:projectUpd' project.id %}" class="btn btn-secondary btn-sm">
                                     Update
                                 </a>
 
-                                <a href="{% url 'accounts:prjStatusList' project.id %}" class="btn btn-secondary btn-sm w-100">
+                                <!--a href="{% url 'accounts:prjStatusList' project.id %}" class="btn btn-secondary btn-sm w-100">
                                     Status
-                                </a>
+                                </!--a-->
 
-                                <button class="btn btn-outline-danger btn-sm w-100 mb-2 text-center"
+                                <button class="btn btn-outline-danger btn-sm w-80 mb-2 text-center"
                                         onclick="confirmDeleteModal('{{project.id}}')">
                                     Close Project
                                 </button>
                                 {% endif %}
-                            </div>
                             </div>
                         </div>
                     </div>

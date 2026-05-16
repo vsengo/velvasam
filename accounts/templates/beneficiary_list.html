@@ -25,32 +25,23 @@
     <div class="row text-center">
         <div class="card mt-2 mb-2">
             <div class="card-header">
+                <p class="fw-bold" >Beneficiaries</p>
                 <div class="row">
                     <div class="col-12 col-md-12">
-                        <div class="d-grid gap-2 d-md-flex justify-content-center">
                             {% if userRole == 'EDIT' %}
-                            <a href="{% url 'accounts:beneficiaryAdd' %}"
-                            class="btn btn-secondary">
-                                Add Beneficiary
+                            <a href="{% url 'accounts:beneficiaryAdd' %}">
+                            <button type="button" class="btn btn-secondary btn-sm">Add</button>
                             </a>
                             {% endif %}
 
-                            <a href="{% url 'accounts:beneficiaryTable' %}"
-                            class="btn btn-secondary">
-                                View Beneficiaries
-                            </a>
+                            <!--a href="{% url 'accounts:beneficiaryTable' %}"
+                            class="btn btn-secondary btn-sm">View</!--a-->
 
                             <button onclick="exportExcel()"
-                                    class="btn btn-secondary">
-                                Export to Excel
-                            </button>
+                                    class="btn btn-secondary btn-sm">Excel</button>
 
                             <button onclick="exportPdf()"
-                                    class="btn btn-secondary">
-                                Export to Pdf
-                            </button>
-
-                        </div>
+                                    class="btn btn-secondary btn-sm">PDF</button>
                     </div>
 
                 </div>
@@ -102,38 +93,24 @@
         <div class="d-block d-md-none">
             {% for data in data_list %}
             <div class="card mb-3 shadow-sm">
-                <div class="card-body">
-
+                <div class="card-body bg-primary bg-opacity-10">
                     <h5 class="card-title">
-                        {{forloop.counter}}. {{data.name}}
+                        {{forloop.counter}}. {{data.name}} [ {{data.category}} | Rs.{{data.amount|floatformat:"-3g"}} ]
                     </h5>
-
+                    <p class="mb-1"><strong>School:</strong> {{data.school}} | <strong>Grade:</strong>{{data.grade}}</p>
                     <p class="mb-1"><strong>Recommender:</strong> {{data.recommender}}</p>
-                    <p class="mb-1"><strong>Category:</strong> {{data.category}}</p>
-                    <p class="mb-1"><strong>School:</strong> {{data.school}}</p>
-                    <p class="mb-1"><strong>Grade:</strong> {{data.grade}}</p>
-                    <p class="mb-2"><strong>Amount:</strong> {{data.amount|floatformat:"-3g"}}</p>
-
-                    <!-- ACTIONS -->
-                    <div class="d-grid gap-2">
+                </div>
+                <div class="card-footer">
+                   <div class="row">
+                    <div class="col-12 col-md-12">
                         <a href="{% url 'accounts:beneficiaryDetail' data.id %}"
-                        class="btn btn-secondary btn-sm w-100 text-center">
-                            Detail
-                        </a>
-
+                        class="btn btn-secondary btn-sm text-center">Detail</a>
                         {% if userRole == 'EDIT' %}
                         <a href="{% url 'accounts:beneficiaryUpd' data.id %}"
-                        class="btn btn-secondary btn-sm w-100 text-center">
-                            Edit
-                        </a>
-
-                        <button class="btn btn-outline-danger btn-sm w-100"
-                                onclick="confirmDeleteModal('{{data.id}}')">
-                            Delete
-                        </button>
+                        class="btn btn-secondary btn-sm text-center">Edit</a>
+                        <button class="btn btn-danger btn-sm" onclick="confirmDeleteModal('{{data.id}}')">Delete</button>
                         {% endif %}
-                    </div>
-
+                    </div></div>
                 </div>
             </div>
             {% endfor %}
