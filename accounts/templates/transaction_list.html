@@ -72,8 +72,8 @@ function confirmDeleteModal(id){
                                 <p><strong>Project:</strong> {{ tx.project.name }}</p>
                                 <p><strong>Beneficiary:</strong> {{ tx.beneficiary.name }}</p>
                                 <p><strong>Expense:</strong> {{ tx.exType }}</p>
-                                <p><strong>Amount:</strong> {{ tx.amount|floatformat:"-3g" }}</p>
-                                <p><strong>AmountLocal:</strong> {{ tx.amountLocal|floatformat:"-3g" }}</p>
+                                <p><strong>Amount:</strong> {{ tx.bank.currency }} {{ tx.amount|floatformat:"-3g" }}</p>
+                                <p><strong>AmountLocal:</strong> {{ tx.bank.currency }} {{ tx.amountLocal|floatformat:"-3g" }}</p>
                                 <p><strong>Status:</strong> {{ tx.confirmed }}</p>
                                 <p><strong>Owner:</strong> {{ tx.owner.first_name }} {{ tx.owner.last_name }}</p>
                                 <p><strong>Remarks:</strong> {{ tx.remarks }}</p>
@@ -118,8 +118,8 @@ function confirmDeleteModal(id){
                             <td>{{ tx.beneficiary.name }}</td>
                             <td>{{ tx.txType }}</td>
                             <td>{{ tx.exType }}</td>
-                            <td>{{ tx.amount|floatformat:"-3g" }}</td>
-                            <td>{{ tx.amountLocal|floatformat:"-3g" }}</td>
+                            <td>{{ tx.bank.currency }} {{ tx.amount|floatformat:"-3g" }}</td>
+                            <td>{{ tx.bank.currency }} {{ tx.amountLocal|floatformat:"-3g" }}</td>
                             <td>{{ tx.date }}</td>
                             <td>{{ tx.remarks }}</td>
                             <td>{{ tx.confirmed }}</td>

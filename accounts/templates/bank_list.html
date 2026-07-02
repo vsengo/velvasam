@@ -42,7 +42,8 @@
                         <th scope="col">Account</th>
                         <th scope="col">Branch</th>
                         <th scope="col">Owner</th>
-                        <th scope="col">Balance</th>
+                        <th scope="col">Currency</th>
+                        <th scope="col">Balance</th>                       
                         <th scope="col">updatedOn</th>
                         {% if userRole == 'EDIT' %}
                         <th scope="col">Update </th>
@@ -59,32 +60,16 @@
                         <td>{{bank.accNumber}} </td>
                         <td>{{bank.branch}}</td>
                         <td>{{bank.holder.first_name}} {{bank.holder.last_name}}</td>
-                        <td>{{bank.balance}}</td>
-                        <td>{{bank.updatedOn}}</td>
                         <td>{{bank.currency}}</td>
+                        <td>{{bank.balance|floatformat:"-3g"}}</td>    
+                        <td>{{bank.updatedOn}}</td>
                         {% if userRole == 'EDIT' %}
                         <td><a href="{% url 'accounts:bankAccountUpd' bank.id %}" class="btn btn-danger btn-md">Edit</a></td>
                         <td>
-                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#deleteUserModal">
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ bank.id }}">
                                 Delete
                             </button>
                         </td>
-                            <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                <div class="modal-dialog">
-                                  <div class="modal-content">
-                                    <div class="modal-header">
-                                      <h5 class="modal-title" id="exampleModalLabel">Confirm Removal!</h5>
-                                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                     Please Confirm you want to remove this Bank
-                                    </div>
-                                    <div class="modal-footer">
-                                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                      <a href="{% url  'accounts:bankAccountDel' bank.id %}" class="btn btn-danger btn-md">Delete</a>
-                                  </div>
-                                </div>
-                            </div>
                         {% endif %} 
                     </tr>
                     {% endfor %}
@@ -92,7 +77,30 @@
             </table>
         </div>
     </div>
- </div>
+</div>
+
+<!-- DELETE MODALS -->
+{% if userRole == 'EDIT' %}
+{% for bank in bank_list %}
+<div class="modal fade" id="deleteUserModal{{ bank.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ bank.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel{{ bank.id }}">Confirm Removal!</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Please Confirm you want to remove this Bank
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="{% url 'accounts:bankAccountDel' bank.id %}" class="btn btn-danger btn-md">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endif %}
 {% endif %}
 {% include 'home/footer.html' %}
 {% endblock content %}

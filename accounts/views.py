@@ -493,6 +493,14 @@ def transactionAddView(request):
                 obj.updatedBy = user
                 obj.save()
 
+                # Update bank account balance based on transaction type
+                bank = obj.bank
+                if obj.txType == Transaction.TxType_DEPOSIT:
+                    bank.balance += obj.amount
+                elif obj.txType == Transaction.TxType_WITHDRWAL:
+                    bank.balance -= obj.amount
+                bank.save()
+
                 if obj.receipt:
                     today = datetime.now()
                     fname, ext = path.splitext(obj.photo.name)
@@ -524,7 +532,6 @@ def get_transactions_by_project(pk):
 
 #add a function to calc bank balance for each transactions
 #mark deleted transactions
-
 
 @login_required
 def transactionExcelView(request, pk):
@@ -600,12 +607,28 @@ def transactionUpdView(request,pk):
     if request.method == 'POST':
         form = TransactionForm(request.POST, request.FILES)
         if form.is_valid():
+            # Revert old transaction effect on balance
+            old_bank = tx.bank
+            if tx.txType == Transaction.TxType_DEPOSIT:
+                old_bank.balance -= tx.amount
+            elif tx.txType == Transaction.TxType_WITHDRWAL:
+                old_bank.balance += tx.amount
+            old_bank.save()
+
             obj=form.save(commit=False)
             obj.updatedBy = user
             obj.project = project
             obj.bank = bank
             obj.id = tx.id
             obj.save()
+
+            # Apply new transaction effect on balance
+            new_bank = obj.bank
+            if obj.txType == Transaction.TxType_DEPOSIT:
+                new_bank.balance += obj.amount
+            elif obj.txType == Transaction.TxType_WITHDRWAL:
+                new_bank.balance -= obj.amount
+            new_bank.save()
 
             if obj.receipt:
                     today = datetime.now()
@@ -622,11 +645,19 @@ def transactionUpdView(request,pk):
             return render(request,template_name='error.html',context=error)
 
     return redirect('accounts:transactionList',pk=0)
- 
+# Revert balance changes when transaction is deleted
 @login_required
 def transactionDelView(request,pk):
     tx = Transaction.objects.filter(id=pk).first()
-    tx.delete()
+    if tx:
+        # Revert transaction effect on bank account balance
+        bank = tx.bank
+        if tx.txType == Transaction.TxType_DEPOSIT:
+            bank.balance -= tx.amount
+        elif tx.txType == Transaction.TxType_WITHDRWAL:
+            bank.balance += tx.amount
+        bank.save()
+        tx.delete()
     return redirect('accounts:transactionList',pk=0)
 
 @api_view(['GET'])
@@ -677,7 +708,14 @@ def bankAccountUpdView(request,bk):
         return render(request,template_name='common_form.html',context={'form':form, 'form_name':form_name})
 
     if request.method == 'POST':
-        form = BankAccountForm(request.POST)
+        if bk=='x':
+            # Adding a new bank account
+            form = BankAccountForm(request.POST)
+        else:
+            # Updating existing bank account
+            bank = BankAccount.objects.get(id=bk)
+            form = BankAccountForm(request.POST, instance=bank)
+        
         if form.is_valid():
             obj=form.save(commit=False)
             obj.updatedBy_id = user.id
@@ -689,9 +727,11 @@ def bankAccountUpdView(request,bk):
         return redirect('accounts:bankAccountList')
 
 @login_required
+@login_required
 def bankAccountDelView(request,bk):
     tx = BankAccount.objects.filter(id=bk).first()
-    tx.delete()
+    if tx:
+        tx.delete()
     return redirect('accounts:bankAccountList')
     
 @login_required
