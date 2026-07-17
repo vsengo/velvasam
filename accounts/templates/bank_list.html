@@ -44,7 +44,7 @@
                         <th scope="col">Owner</th>
                         <th scope="col">Currency</th>
                         <th scope="col">Balance</th>                       
-                        <th scope="col">updatedOn</th>
+                        <th scope="col">UpdatedOn</th>
                         {% if userRole == 'EDIT' %}
                         <th scope="col">Update </th>
                         <th scope="col">Delete </th>
@@ -54,7 +54,7 @@
                 <tbody>
                    {% for bank in bank_list %}
                     <tr>
-                        <th scope=""row">{{forloop.counter}}</th>
+                        <th scope="row">{{forloop.counter}}</th>
                         <td>{{bank.name}} </td>
                         <td>{{bank.bank}} </td>
                         <td>{{bank.accNumber}} </td>
