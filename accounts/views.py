@@ -39,6 +39,29 @@ from .models import Transaction
 
 from django.template.loader import render_to_string
 from weasyprint import HTML
+from decimal import Decimal
+
+
+def adjust_bank_balance(bank, tx_type=None, amount=None, reverse=False):
+    if bank is None:
+        return None
+
+    balance = Decimal('0')
+    transactions = Transaction.objects.filter(bank_id=bank.id)
+
+    for tx in transactions:
+        normalized_tx_type = str(getattr(tx, 'txType', '') or '').strip().upper()
+        tx_amount = Decimal(str(getattr(tx, 'amount', 0) or 0))
+
+        if normalized_tx_type in {Transaction.TxType_DEPOSIT, 'DEPOSIT', Transaction.TxType_INCOME, 'INTEREST', 'INCOME'}:
+            balance += tx_amount
+        elif normalized_tx_type in {Transaction.TxType_WITHDRWAL, 'WITHDRAWAL', 'WITHDRAW', Transaction.TxType_FEES, 'FEES'}:
+            balance -= tx_amount
+
+    bank.balance = balance
+    bank.save(update_fields=['balance'])
+    return bank
+
 
 class SignUpView(generic.CreateView):
     form_class = RegisterForm
@@ -194,22 +217,30 @@ def projectAddView(request):
             return render(request,template_name='error.html',context=error)
 def calculate():
     transaction = read_frame(Transaction.objects.all())
-    txs = transaction.loc[:,['txType','amount','project']]
+    txs = transaction.loc[:,['txType','amountLocal','project']]
     txs['project'] = txs['project'].str.strip()
 
     px = txs.groupby(['project','txType']).sum().reset_index()
     px.fillna(0)
     project = Project.objects.all()
     for prj in project.iterator():
-        tmp=px.loc[lambda df:(df["project"]==prj.name) & (px['txType']=='Deposit'),['amount']]
+        tmp=px.loc[lambda df:(df["project"]==prj.name) & (px['txType']=='Deposit'),['amountLocal']]
         prj.raisedFund=0 
         prj.spentFund=0
         if not tmp.empty:
-            prj.raisedFund = tmp['amount'].values[0]
-
-        tmp = px.loc[lambda df:(px['project'] == prj.name) & (px['txType']=='Withdraw'),['amount']]
+            prj.raisedFund = tmp['amountLocal'].values[0]
+            
+        tmp=px.loc[lambda df:(df["project"]==prj.name) & (px['txType']=='Interest'),['amountLocal']]
         if not tmp.empty:
-            prj.spentFund = tmp['amount'].values[0]
+            prj.raisedFund += tmp['amountLocal'].values[0]
+        
+        tmp = px.loc[lambda df:(px['project'] == prj.name) & (px['txType']=='Withdraw'),['amountLocal']]
+        if not tmp.empty:
+            prj.spentFund = tmp['amountLocal'].values[0]
+            
+        tmp = px.loc[lambda df:(px['project'] == prj.name) & (px['txType']=='fees'),['amountLocal']]
+        if not tmp.empty:
+            prj.spentFund += tmp['amountLocal'].values[0]
 
         prj.balance    = prj.raisedFund - prj.spentFund
         prj.save()
@@ -476,13 +507,15 @@ def transactionListView(request, pk):
 @login_required 
 def transactionAddView(request):
     user = User.objects.get(id=request.user.id)
+    bank_currency_map = {str(bank.id): bank.currency for bank in BankAccount.objects.all()}
+
     if request.method == 'GET':
         form = TransactionForm()
         form.fields['exType'].queryset = ExpenseType.objects.all()
         form.fields['bank'].queryset = BankAccount.objects.all()
         form.fields['owner'].queryset = User.objects.order_by('first_name')
 
-        return render(request = request,template_name = "transaction.html",context={"form":form})
+        return render(request = request,template_name = "transaction.html",context={"form":form, "bank_currency_map": bank_currency_map})
         
     if request.method == 'POST':
         form = TransactionForm(request.POST,request.FILES)
@@ -492,6 +525,9 @@ def transactionAddView(request):
                 obj=form.save(commit=False)
                 obj.updatedBy = user
                 obj.save()
+
+                # Recalculate the bank balance from the current transaction ledger.
+                bank = adjust_bank_balance(obj.bank)
 
                 if obj.receipt:
                     today = datetime.now()
@@ -525,7 +561,6 @@ def get_transactions_by_project(pk):
 #add a function to calc bank balance for each transactions
 #mark deleted transactions
 
-
 @login_required
 def transactionExcelView(request, pk):
     wb = Workbook()
@@ -534,7 +569,7 @@ def transactionExcelView(request, pk):
 
     ws.append([
         "ID", "Account", "Project", "Beneficiary",
-        "Action", "Expense", "Amount", "Date",
+        "Action", "Expense", "Amount", "AmountLocal","Date",
         "Status", "Owner", "Remarks"
     ])
 
@@ -550,6 +585,7 @@ def transactionExcelView(request, pk):
             str(t.txType),
             str(t.exType),
             float(t.amount),
+            float(t.amountLocal),
             t.date.strftime("%Y-%m-%d"),
             t.confirmed,
             f"{t.owner.first_name} {t.owner.last_name}",
@@ -588,13 +624,13 @@ def transactionUpdView(request,pk):
     tx = Transaction.objects.get(id=pk)  
     bank = BankAccount.objects.get(id=tx.bank_id)
     project = Project.objects.get(id = tx.project_id)
-
     if request.method == 'GET':
         form  = TransactionForm(instance = tx)
         form.fields['exType'].queryset = ExpenseType.objects.filter(prjType_id = project.prjType.id)
         form.fields['bank'].queryset = BankAccount.objects.all()
         form.fields['owner'].queryset = User.objects.order_by('first_name')
-        return render(request,template_name='common_form.html',context={'form':form, 'form_name':"Transaction "})
+        bank_currency_map = {str(bank.id): bank.currency for bank in BankAccount.objects.all()}
+        return render(request,template_name='common_form.html',context={'form':form, 'form_name':"Transaction ", 'bank_currency_map': bank_currency_map})
 
     if request.method == 'POST':
         form = TransactionForm(request.POST, request.FILES)
@@ -605,6 +641,9 @@ def transactionUpdView(request,pk):
             obj.bank = bank
             obj.id = tx.id
             obj.save()
+
+            # Recalculate the bank balance from the full transaction ledger.
+            new_bank = adjust_bank_balance(bank)
 
             if obj.receipt:
                     today = datetime.now()
@@ -620,12 +659,16 @@ def transactionUpdView(request,pk):
             error={'message':'Error in Data input to Minutes'}
             return render(request,template_name='error.html',context=error)
 
-    return redirect('accounts:transactionList',pk=0)
- 
+    return redirect('accounts:transactionList',pk=tx.project_id)
+# Revert balance changes when transaction is deleted
 @login_required
 def transactionDelView(request,pk):
     tx = Transaction.objects.filter(id=pk).first()
-    tx.delete()
+    if tx:
+        project_id = tx.project_id
+        tx.delete()
+        bank = adjust_bank_balance(tx.bank)
+        return redirect('accounts:transactionList',pk=project_id)
     return redirect('accounts:transactionList',pk=0)
 
 @api_view(['GET'])
@@ -676,7 +719,14 @@ def bankAccountUpdView(request,bk):
         return render(request,template_name='common_form.html',context={'form':form, 'form_name':form_name})
 
     if request.method == 'POST':
-        form = BankAccountForm(request.POST)
+        if bk=='x':
+            # Adding a new bank account
+            form = BankAccountForm(request.POST)
+        else:
+            # Updating existing bank account
+            bank = BankAccount.objects.get(id=bk)
+            form = BankAccountForm(request.POST, instance=bank)
+        
         if form.is_valid():
             obj=form.save(commit=False)
             obj.updatedBy_id = user.id
@@ -688,9 +738,11 @@ def bankAccountUpdView(request,bk):
         return redirect('accounts:bankAccountList')
 
 @login_required
+@login_required
 def bankAccountDelView(request,bk):
     tx = BankAccount.objects.filter(id=bk).first()
-    tx.delete()
+    if tx:
+        tx.delete()
     return redirect('accounts:bankAccountList')
     
 @login_required
@@ -833,7 +885,7 @@ def beneficiaryDetailView(request,pk):
 def calcFinanceReport():
     transaction = read_frame(Transaction.objects.all())
     txs = transaction.loc[:,['txType','date','amount']]
-    txs['year'] = DateUtils.cv2Year(txs['date'])
+    txs['year'] = DateUtil.cv2Year(txs['date'])
     
     px = txs.groupby(['txType']).sum().reset_index()
     px.fillna(0)

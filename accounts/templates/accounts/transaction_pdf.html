@@ -54,6 +54,7 @@
             <th>Action</th>
             <th>Expense</th>
             <th>Amount</th>
+            <th>AmountLocal</th>
             <th>Date</th>
             <th>Status</th>
             <th>Owner</th>
@@ -70,6 +71,7 @@
             <td>{{ data.txType }}</td>
             <td>{{ data.exType }}</td>
             <td>{{ data.amount }}</td>
+            <td>{{ data.amountLocal }}</td>
             <td>{{ data.date|date:"Y-m-d" }}</td>
             <td>{{ data.confirmed }}</td>
             <td>{{ data.owner.first_name }} {{ data.owner.last_name }}</td>
