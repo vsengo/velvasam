@@ -22,78 +22,135 @@
 </div>
 {% else %}   
 <div class="container-fluid">
-    <div class="row text-center justify-content-center">
+    <div class="row text-center">
         <div class="card mt-2 mb-2">
             <div class="card-header">
+                <p class="fw-bold" >Beneficiaries</p>
                 <div class="row">
-                    <div class="col-sm-6">
-                        {% if userRole == 'EDIT' %}
-                         <a href="{% url 'accounts:beneficiaryAdd'  %}" class="btn btn-secondary btn-md">Add Beneficiary</a>
-                        {% endif %}
+                    <div class="col-12 col-md-12">
+                            {% if userRole == 'EDIT' %}
+                            <a href="{% url 'accounts:beneficiaryAdd' %}">
+                            <button type="button" class="btn btn-secondary btn-sm">Add</button>
+                            </a>
+                            {% endif %}
+
+                            <!--a href="{% url 'accounts:beneficiaryTable' %}"
+                            class="btn btn-secondary btn-sm">View</!--a-->
+
+                            <button onclick="exportExcel()"
+                                    class="btn btn-secondary btn-sm">Excel</button>
+
+                            <button onclick="exportPdf()"
+                                    class="btn btn-secondary btn-sm">PDF</button>
                     </div>
-                    <div class="col-sm-6">
-                        <a href="{% url 'accounts:beneficiaryTable'  %}" class="btn btn-secondary btn-md">View Beneficiaries</a>              </div>
-                    </div>
+
                 </div>
             </div>
         </div>
    
-        <div class="card mt-2 mb-2">
+        <!-- ================= DESKTOP VIEW ================= -->
+        <div class="card mt-2 mb-2 d-none d-md-block">
             <table class="table table-striped table-hover">
                 <thead>
                     <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">Name</th>
-                        <th scope="col">Recomender</th>
-                        <th scope="col">Category</th>
-                        <th scope="col">School</th>
-                        <th scope="col">Grade</th>
-                        <th scope="col">Amount</th>       
-                        <th scope="col">Actions</th>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Recomender</th>
+                        <th>Category</th>
+                        <th>School</th>
+                        <th>Grade</th>
+                        <th>Amount</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                   {% for data in data_list %}
+                {% for data in data_list %}
                     <tr>
-                        <th scope=""row">{{forloop.counter}}</th>
-                        <td>{{data.name}} </td>
-                        <td>{{data.recommender}} </td>
-                        <td>{{data.category}} </td>
+                        <th>{{forloop.counter}}</th>
+                        <td>{{data.name}}</td>
+                        <td>{{data.recommender}}</td>
+                        <td>{{data.category}}</td>
                         <td>{{data.school}}</td>
                         <td>{{data.grade}}</td>
-                        <td>{{data.amount}}</td>
-                        <td><a href="{% url 'accounts:beneficiaryDetail' data.id %}" class="btn btn-danger btn-md">Detail</a>
-                       
-                        {% if userRole == 'EDIT' %}
-                        <a href="{% url 'accounts:beneficiaryUpd' data.id %}" class="btn btn-danger btn-md">Edit</a>
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" onclick="confirmDeleteModal('{{data.id}}')" id="deleteID">
-                            Delete
-                        </button> 
+                        <td>{{data.amount|floatformat:"-3g"}}</td>
+                        <td>
+                            <a href="{% url 'accounts:beneficiaryDetail' data.id %}" class="btn btn-secondary btn-sm">Detail</a>
+                            {% if userRole == 'EDIT' %}
+                            <a href="{% url 'accounts:beneficiaryUpd' data.id %}" class="btn btn-secondary btn-sm">Edit</a>
+                            <button class="btn btn-outline-danger btn-sm"
+                                onclick="confirmDeleteModal('{{data.id}}')">
+                                Delete
+                            </button>
+                            {% endif %}
                         </td>
-                        <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                            <div class="modal-dialog">
-                               <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" style="color:red">Confirm you want to Delete the record.</h5>
-                                        <form id="delete_confirm_form" method="post">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-warning mr-1" data-dismiss="modal">DELETE</button>
-                                        </form>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <p class="modal-title">Click outside this box to Cancel.</p>
-                                    </div>
-                               </div> 
-                            </div>
-                        </div>
-                        {% endif %} 
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        <!-- ================= MOBILE VIEW ================= -->
+        <div class="d-block d-md-none">
+            {% for data in data_list %}
+            <div class="card mb-3 shadow-sm">
+                <div class="card-body bg-primary bg-opacity-10">
+                    <h5 class="card-title">
+                        {{forloop.counter}}. {{data.name}} [ {{data.category}} | Rs.{{data.amount|floatformat:"-3g"}} ]
+                    </h5>
+                    <p class="mb-1"><strong>School:</strong> {{data.school}} | <strong>Grade:</strong>{{data.grade}}</p>
+                    <p class="mb-1"><strong>Recommender:</strong> {{data.recommender}}</p>
+                </div>
+                <div class="card-footer">
+                   <div class="row">
+                    <div class="col-12 col-md-12">
+                        <a href="{% url 'accounts:beneficiaryDetail' data.id %}"
+                        class="btn btn-secondary btn-sm text-center">Detail</a>
+                        {% if userRole == 'EDIT' %}
+                        <a href="{% url 'accounts:beneficiaryUpd' data.id %}"
+                        class="btn btn-secondary btn-sm text-center">Edit</a>
+                        <button class="btn btn-danger btn-sm" onclick="confirmDeleteModal('{{data.id}}')">Delete</button>
+                        {% endif %}
+                    </div></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
     </div>
  </div>
 {% endif %}
+
+<script>
+function exportExcel() {
+    fetch("{% url 'accounts:beneficiaryExcel' %}")
+    .then(response => response.blob())
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "beneficiaries.xlsx";
+        a.click();
+
+        alert("Export successful ✅");
+    });
+}
+</script>
+
+<script>
+function exportPdf() {
+    fetch("{% url 'accounts:beneficiaryPdf' %}")
+    .then(response => response.blob())
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "beneficiaries.pdf";
+        a.click();
+
+        alert("Export successful ✅");
+    });
+}
+</script>
+
+
+
 {% include 'home/footer.html' %}
 {% endblock content %}

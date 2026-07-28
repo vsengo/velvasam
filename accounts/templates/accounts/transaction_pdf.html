@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<style>
+    @page {
+        size: A4 landscape;
+        margin: 8mm;
+
+        @bottom-right {
+            content: "Page " counter(page) " of " counter(pages);
+            font-size: 9px;
+        }
+    }
+
+    body {
+        font-family: Arial;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+
+    thead {
+        display: table-header-group;
+    }
+
+    th, td {
+        border: 1px solid black;
+        padding: 4px;
+        font-size: 10px;
+        word-wrap: break-word;
+    }
+
+    tfoot td {
+        font-weight: bold;
+        background-color: #f2f2f2;
+    }
+</style>
+</head>
+<body>
+
+<h2>Transactions Report</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Account</th>
+            <th>Project</th>
+            <th>Beneficiary</th>
+            <th>Action</th>
+            <th>Expense</th>
+            <th>Amount</th>
+            <th>AmountLocal</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Owner</th>
+            <th>Remarks</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for data in data_list %}
+        <tr>
+            <td>{{ data.id }}</td>
+            <td>{{ data.bank.name }}</td>
+            <td>{{ data.project.name }}</td>
+            <td>{{ data.beneficiary.name }}</td>
+            <td>{{ data.txType }}</td>
+            <td>{{ data.exType }}</td>
+            <td>{{ data.amount }}</td>
+            <td>{{ data.amountLocal }}</td>
+            <td>{{ data.date|date:"Y-m-d" }}</td>
+            <td>{{ data.confirmed }}</td>
+            <td>{{ data.owner.first_name }} {{ data.owner.last_name }}</td>
+            <td>{{ data.remarks }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</body>
+</html>

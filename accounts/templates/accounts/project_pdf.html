@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 8mm;
+
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-size: 12px;
+            }
+        }
+        body { font-family: Arial; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid black; padding: 6px; font-size: 12px; }
+        th { background-color: #f2f2f2; }
+
+        
+    </style>
+</head>
+<body>
+
+<h2>Projects Report</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Project Name</th>
+            <th>Start Date</th>
+            <th>Status</th>
+            <th>Total Fund</th>
+            <th>Total Donate</th>
+            <th>BALANCE</th>
+        </tr>
+    </thead>
+    <tbody>
+
+        {% for project in data_list %}
+        <tr>
+            <td>{{forloop.counter}}</td>
+            <td>{{project.name}}</td>
+            <td>{{project.startDate}}</td>
+            <td>{{project.status}}</td>
+            <td>{{project.raisedFund|floatformat:"-3g"}}</td>
+            <td>{{project.spentFund|floatformat:"-3g"}}</td>
+            <td>{{project.balance|floatformat:"-3g"}}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</body>
+</html>

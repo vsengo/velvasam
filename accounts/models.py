@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
@@ -104,6 +106,13 @@ class ExpenseType(models.Model):
         return "%s " % (self.expense)
 
 class BankAccount(models.Model):
+    CURRENCY_CHOICES = [
+            ('USD', 'US Dollar'),
+            ('GBP', 'British Pound'),
+            ('EUR', 'Euro'),
+            ('LKR', 'Sri Lankan Rupee'),
+        ]
+
     holder = models.ForeignKey(User,related_name='holder', on_delete=models.PROTECT)
     name = models.CharField(max_length=32)
     purpose = models.CharField(max_length=128,null=True,blank=True)
@@ -116,7 +125,8 @@ class BankAccount(models.Model):
     balance = models.DecimalField(max_digits=12,decimal_places=2,default=0.0)  
     updatedBy = models.ForeignKey(User,on_delete=models.CASCADE)
     updatedOn = models.DateTimeField(default=timezone.now)
-
+    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='LKR')
+    
     def __str__(self):
         return "%s" % (self.name)
 
@@ -175,13 +185,18 @@ class Transaction(models.Model):
     exType  = models.ForeignKey(ExpenseType, on_delete=models.CASCADE)
     remarks = models.TextField(max_length=100,blank=True,null=True)
     beneficiary = models.ForeignKey(Beneficiary,on_delete=models.CASCADE, default=get_default_beneficiary)
-    amount  = models.IntegerField()
+    amount = models.IntegerField(default=0)
     date    = models.DateField(default=timezone.now)
     receipt = models.FileField(upload_to='transaction/%Y',null=True,blank=True)
-    confirmed = models.CharField(max_length=16,choices=TXCONFIRM,default='UnConfirmed')
+    confirmed = models.CharField(max_length=16,choices=TXCONFIRM,default='Unconfirmed')
     updatedBy = models.ForeignKey(User,on_delete=models.PROTECT)
     updatedOn = models.DateTimeField(default=timezone.now)
-
+    amountLocal = models.IntegerField(default=0)
+    
+    def save(self, *args, **kwargs):
+        if not self.amountLocal:
+            self.amountLocal = self.amount
+        super().save(*args, **kwargs)
 
 class ProjectStatus(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)

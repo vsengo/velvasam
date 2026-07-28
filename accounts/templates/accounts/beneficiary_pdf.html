@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        @page {
+            size: A4;
+            margin: 8mm;
+
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-size: 12px;
+            }
+        }
+        body { font-family: Arial; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid black; padding: 6px; font-size: 12px; }
+        th { background-color: #f2f2f2; }
+
+        
+    </style>
+</head>
+<body>
+
+<h2>Beneficiaries Report</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Recommender</th>
+            <th>Category</th>
+            <th>School</th>
+            <th>Grade</th>
+            <th>Amount</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for data in data_list %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ data.name }}</td>
+            <td>{{ data.recommender }}</td>
+            <td>{{ data.category }}</td>
+            <td>{{ data.school }}</td>
+            <td>{{ data.grade }}</td>
+            <td>{{ data.amount|floatformat:"-3g" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</body>
+</html>

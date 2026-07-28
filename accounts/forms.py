@@ -111,7 +111,7 @@ class TransactionForm(forms.ModelForm):
 
     class Meta:
         model = Transaction
-        fields = ['owner','bank','project','txType','exType','beneficiary','amount','confirmed','date','remarks']
+        fields = ['owner','bank','project','txType','exType','beneficiary','amount','amountLocal','confirmed','date','remarks']
 
     def save(self, commit=True):
         data = super(TransactionForm, self).save(commit=False)
@@ -137,7 +137,7 @@ class BankAccountForm(forms.ModelForm):
     holder=MemberChoiceField(queryset=User.objects.filter())
     class Meta:
         model  = BankAccount
-        fields = ['holder','name','purpose','bank','accNumber','branch','routing','telno','email','balance']
+        fields = ['holder','name','purpose','bank','accNumber','branch','routing','telno','email','balance', 'currency']
 
     def save(self, commit=True):
         data = super(BankAccountForm, self).save(commit=False)

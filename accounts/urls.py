@@ -3,12 +3,16 @@ from django.contrib.auth import views as auth_views
 from django.urls import path,re_path,include
 from .views import  SignUpView, deleteMember, logOff, logIn, memberView, projectAddView,projectListView,projectDelView,ProjectUpd, change_password
 from .views import committeeAddView, CommitteeUpd, committeeDelView,committeeListView, minuteAddView, minuteDelView, minuteListView, minuteUpdView
-from .views import transactionAddView, transactionDelView, transactionListView,transactionUpdView, memberUpdView
+from .views import transactionAddView, transactionDelView, transactionListView,transactionUpdView, memberUpdView, transactionExcelView, transactionPdfView
 from .views import bankAccountListView, bankAccountAddView, bankAccountDelView, bankAccountUpdView
 from .views import bankAccountSummary, deleteMember, pwdResetInstruction, beneficiaryListView
 from .views import getTransactions, transactionAllView, beneficiaryAddView, beneficiaryDelView,beneficiaryUpdView
-from .views import beneficiaryDetailView, projectClosedListView, beneficiaryTableView, getBeneficiary
-from .views import projectTableView, getProject, prjStatusAddView, prjStatusDelView, prjStatusListView, prjStatusUpdView
+from .views import beneficiaryDetailView, projectClosedListView, beneficiaryTableView, getBeneficiary, beneficiaryExcelView, beneficiaryPdfView
+from .views import projectTableView, getProject, prjStatusAddView, prjStatusDelView, prjStatusListView, prjStatusUpdView, projectPdfView,  projectExcelView
+from django.urls import path
+from . import views
+
+app_name = 'accounts'
 
 urlpatterns = [
     re_path(r'signup', SignUpView.as_view(), name='signup'),
@@ -21,6 +25,8 @@ urlpatterns = [
     re_path(r'beneficiaryDetail/(?P<pk>\d+)', beneficiaryDetailView, name='beneficiaryDetail'),
     re_path(r'beneficiaryTable', beneficiaryTableView, name='beneficiaryTable'),
     re_path(r'beneficiaryList', beneficiaryListView, name='beneficiaryList'),
+    re_path(r'beneficiaryExcel', beneficiaryExcelView, name='beneficiaryExcel'),
+    re_path(r'beneficiaryPdf', beneficiaryPdfView, name='beneficiaryPdf'),
     re_path(r'beneficiaryAdd', beneficiaryAddView, name='beneficiaryAdd'),
     re_path(r'beneficiaryDel/(?P<pk>\d+)', beneficiaryDelView, name='beneficiaryDel'),
     re_path(r'beneficiaryUpd/(?P<pk>\d+)', beneficiaryUpdView, name='beneficiaryUpd'),
@@ -28,12 +34,13 @@ urlpatterns = [
 
     re_path(r'projectClosedList', projectClosedListView, name='projectClosedList'),
     re_path(r'projectList', projectListView, name='projectList'),
+    re_path(r'projectExcel', projectExcelView, name='projectExcel'),
+    re_path(r'projectPdf', projectPdfView, name='projectPdf'),
     re_path(r'projectAdd', projectAddView, name='projectAdd'),
     re_path(r'projectDel(?P<pk>\d+)', projectDelView, name='projectDel'),
     re_path(r'projectUpd(?P<pk>\d+)', ProjectUpd.as_view(), name='projectUpd'),
     re_path(r'projectTable', projectTableView, name='projectTable'),
     re_path(r'getProject', getProject, name='getProject'),
-
     re_path(r'bankAccountList', bankAccountListView, name='bankAccountList'),
     re_path(r'bankAccountAdd', bankAccountAddView, name='bankAccountAdd'),
     re_path(r'bankAccountDel(?P<bk>\d+)', bankAccountDelView, name='bankAccountDel'),
@@ -42,6 +49,8 @@ urlpatterns = [
     re_path(r'transactionAll', transactionAllView, name='transactionAll'),
     re_path(r'transactionList(?P<pk>\d+)', transactionListView, name='transactionList'),
     re_path(r'transactionAdd', transactionAddView, name='transactionAdd'),
+    re_path(r'transactionExcel(?P<pk>\d+)', transactionExcelView, name='transactionExcel'),
+    re_path(r'^transactionPdf/(?P<pk>\d+)/$', transactionPdfView, name='transactionPdf'),
     re_path(r'transactionUpd(?P<pk>\d+)', transactionUpdView, name='transactionUpd'),
     re_path(r'transactionDel(?P<pk>\d+)', transactionDelView, name='transactionDel'),
 
@@ -91,4 +100,8 @@ urlpatterns = [
     re_path(r'password_reset_complete',
          auth_views.PasswordResetCompleteView.as_view(template_name='accounts/password_reset/pwdreset_complete.html'),
          name='password_reset_complete'),
+
+    path('transactions/<int:pk>/', views.transactionListView, name='transactionList'),
+    path('transactions/all/', views.transactionAllView, name='transactionAll'),
+    path('api/transactions/', views.getTransactions, name='getTransactions'),
 ]

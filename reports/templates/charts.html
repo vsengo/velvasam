@@ -1,37 +1,143 @@
 {% extends 'home/base.html' %}
 {% load static %}
 {% block content %}
-<div class="container">
-  <div class="row">
-    <div class="col">
+<style>
+  /* Responsive chart container styles */
+  .chart-container {
+    height: 400px;
+    width: 100%;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    flex-shrink: 0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Ensure rows don't grow */
+  .row {
+    align-items: stretch !important;
+  }
+
+  /* Ensure columns maintain container height */
+  .col-12, .col-sm-12, .col-md-6, .col-lg-4 {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .col-12 > .chart-container,
+  .col-sm-12 > .chart-container,
+  .col-md-6 > .chart-container,
+  .col-lg-4 > .chart-container {
+    height: 400px;
+    flex-grow: 0;
+  }
+
+  /* Mobile-first approach */
+  @media (max-width: 576px) {
+    .chart-container {
+      height: 300px;
+      margin-bottom: 0.75rem;
+    }
+    
+    .container {
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+    }
+    
+    .row {
+      margin-left: -0.25rem;
+      margin-right: -0.25rem;
+    }
+    
+    .col-12 {
+      padding-left: 0.25rem;
+      padding-right: 0.25rem;
+    }
+  }
+
+  /* Tablet screens */
+  @media (min-width: 577px) and (max-width: 991px) {
+    .chart-container {
+      height: 350px;
+    }
+  }
+
+  /* Desktop screens */
+  @media (min-width: 992px) {
+    .chart-container {
+      height: 400px;
+    }
+  }
+
+  /* Ensure responsive behavior for Highcharts */
+  [id^="container"],
+  [id^="balance"],
+  [id^="risk"],
+  [id^="optbyacc"] {
+    width: 100%;
+    height: 100%;
+  }
+</style>
+
+<div class="container-flid">
+  <div class="row g-2 g-md-3">
+    <div class="col-12 col-sm-12 col-md-6 col-lg-4">
       <div id="containerMonthlyAvg"  data-url={% url 'reports:data_monthlyAvg' %}></div>
     </div>
-    <div class="col">
+    <div class="col-12 col-sm-12 col-md-6 col-lg-4">
       <div id="containerMonthly"  data-url={% url 'reports:data_monthly' %}></div>
     </div>
   </div>
 </div>
 
-
-
-<script src="https://code.highcharts.com/highcharts.src.js"></script>
+<script src="{% static 'js/Highcharts-12.5.0/code/highcharts.js' %}"></script>
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-  <script>
-    $.ajax({
-      url: $("#containerMonthly").attr("data-url"),
-      dataType: 'json',
-      success: function (data) {
-        Highcharts.chart("containerMonthly", data);
+ <script>
+    // Store chart instances for responsive redraw
+    var chartInstances = {};
+
+    // Function to load a chart
+    function loadChart(elementId) {
+      var $element = $("#" + elementId);
+      
+      if ($element.length === 0) {
+        return; // Element doesn't exist, skip
       }
-    });
-    $.ajax({
-      url: $("#containerMonthlyAvg").attr("data-url"),
-      dataType: 'json',
-      success: function (data) {
-        Highcharts.chart("containerMonthlyAvg", data);
+
+      var url = $element.attr("data-url");
+      if (!url) {
+        return; // No URL, skip
       }
-    });
+
+      $.ajax({
+        url: url,
+        dataType: 'json',
+        success: function (data) {
+          // Destroy existing chart if it exists
+          if (chartInstances[elementId]) {
+            chartInstances[elementId].destroy();
+          }
+          
+          // Force options to prevent vertical resizing
+          data.responsive = false;
+          data.chart = data.chart || {};
+          data.chart.height = 400;
+          
+          // Create new chart
+          chartInstances[elementId] = Highcharts.chart(elementId, data);
+        },
+        error: function (xhr, status, error) {
+          console.log("Error loading chart: " + elementId + " - " + error);
+        }
+      });
+    }
+// Load all charts
+$(document).ready(function() {
+  loadChart("containerMonthly");
+  loadChart("containerMonthlyAvg");
+})
 </script>
+
 {% include 'home/footer.html' %}
 {% endblock %}
-

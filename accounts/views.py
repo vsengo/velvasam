@@ -9,9 +9,14 @@ from django.views import generic
 from django.views.generic import UpdateView
 from django.contrib  import messages
 from django.db import IntegrityError
+from rest_framework import request
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
-from  django_pandas.io import read_frame
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from accounts.models import Transaction
+from accounts.serializers import TransactionSerializer
+from django.contrib.auth.decorators import login_required
+from django_pandas.io import read_frame
 
 from django.db.models import Sum, Count
 from django.conf import settings
@@ -26,6 +31,37 @@ from accounts.models import BankAccount, Commitee, Member, Project, Minute, User
 from accounts.serializers import BeneficiarySerializer, TransactionSerializer, ProjectSerializer
 from accounts.models import Beneficiary, ProjectStatus
 from accounts.forms import BeneficiaryForm, ProjectStatusForm
+from util.date import DateUtil
+
+from django.http import HttpResponse
+from openpyxl import Workbook
+from .models import Transaction
+
+from django.template.loader import render_to_string
+from weasyprint import HTML
+from decimal import Decimal
+
+
+def adjust_bank_balance(bank, tx_type=None, amount=None, reverse=False):
+    if bank is None:
+        return None
+
+    balance = Decimal('0')
+    transactions = Transaction.objects.filter(bank_id=bank.id)
+
+    for tx in transactions:
+        normalized_tx_type = str(getattr(tx, 'txType', '') or '').strip().upper()
+        tx_amount = Decimal(str(getattr(tx, 'amount', 0) or 0))
+
+        if normalized_tx_type in {Transaction.TxType_DEPOSIT, 'DEPOSIT', Transaction.TxType_INCOME, 'INTEREST', 'INCOME'}:
+            balance += tx_amount
+        elif normalized_tx_type in {Transaction.TxType_WITHDRWAL, 'WITHDRAWAL', 'WITHDRAW', Transaction.TxType_FEES, 'FEES'}:
+            balance -= tx_amount
+
+    bank.balance = balance
+    bank.save(update_fields=['balance'])
+    return bank
+
 
 class SignUpView(generic.CreateView):
     form_class = RegisterForm
@@ -159,7 +195,6 @@ def getUserRole(user,table):
         userRole='EDIT'
     elif user.has_perm('accounts.view_'+table):
         userRole='VIEW'
-    print('table :'+table+' '+userRole)
    
     return userRole
 
@@ -182,22 +217,30 @@ def projectAddView(request):
             return render(request,template_name='error.html',context=error)
 def calculate():
     transaction = read_frame(Transaction.objects.all())
-    txs = transaction.loc[:,['txType','amount','project']]
+    txs = transaction.loc[:,['txType','amountLocal','project']]
     txs['project'] = txs['project'].str.strip()
 
     px = txs.groupby(['project','txType']).sum().reset_index()
     px.fillna(0)
     project = Project.objects.all()
     for prj in project.iterator():
-        tmp=px.loc[lambda df:(df["project"]==prj.name) & (px['txType']=='Deposit'),['amount']]
+        tmp=px.loc[lambda df:(df["project"]==prj.name) & (px['txType']=='Deposit'),['amountLocal']]
         prj.raisedFund=0 
         prj.spentFund=0
         if not tmp.empty:
-            prj.raisedFund = tmp['amount'].values[0]
-
-        tmp = px.loc[lambda df:(px['project'] == prj.name) & (px['txType']=='Withdraw'),['amount']]
+            prj.raisedFund = tmp['amountLocal'].values[0]
+            
+        tmp=px.loc[lambda df:(df["project"]==prj.name) & (px['txType']=='Interest'),['amountLocal']]
         if not tmp.empty:
-            prj.spentFund = tmp['amount'].values[0]
+            prj.raisedFund += tmp['amountLocal'].values[0]
+        
+        tmp = px.loc[lambda df:(px['project'] == prj.name) & (px['txType']=='Withdraw'),['amountLocal']]
+        if not tmp.empty:
+            prj.spentFund = tmp['amountLocal'].values[0]
+            
+        tmp = px.loc[lambda df:(px['project'] == prj.name) & (px['txType']=='fees'),['amountLocal']]
+        if not tmp.empty:
+            prj.spentFund += tmp['amountLocal'].values[0]
 
         prj.balance    = prj.raisedFund - prj.spentFund
         prj.save()
@@ -206,10 +249,61 @@ def calculate():
 def projectListView(request):
     if request.method == 'GET':
         calculate()
-        projects = Project.objects.exclude(status=Project.COMPLETED)
+        projects = Project.objects.exclude(status=Project.COMPLETED).order_by('-updatedOn')
+        #projects = Project.objects.filter(/* your filters */).order_by('-updatedOn')
         user = User.objects.get(id=request.user.id)
         userRole=getUserRole(user,'project')
         return render(request = request,template_name = "project_list.html",context={'project_list':projects, 'userRole':userRole})
+
+@login_required
+def projectExcelView(request):
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Projects"
+
+    ws.append([
+        "ID", "Project Name", "StartDate", "status",
+        "Raised Fund", "Spent Fund", "BALANCE"
+    ])
+
+    # ✅ reuse logic
+    projects = Project.objects.exclude(status=Project.COMPLETED).order_by('-updatedOn')
+
+    for p in projects:
+        ws.append([
+            p.id,
+            p.name,
+            p.startDate,
+            p.status,
+            p.raisedFund,
+            p.spentFund,
+            p.balance
+        ])
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response['Content-Disposition'] = 'attachment; filename=projects.xlsx'
+
+    wb.save(response)
+    return response
+
+@login_required
+def projectPdfView(request):
+    data = Project.objects.exclude(status=Project.COMPLETED).order_by('-updatedOn')
+
+    html_string = render_to_string(
+        'accounts/project_pdf.html',
+        {'data_list': data}
+    )
+
+    html = HTML(string=html_string)
+    pdf = html.write_pdf()
+
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="projects.pdf"'
+
+    return response
 
 @login_required
 def projectClosedListView(request):
@@ -382,35 +476,46 @@ def minuteDelView(request,pk):
 
 @login_required
 def transactionAllView(request):
-    if request.method == 'GET':
-        user = User.objects.get(id=request.user.id)
-        userRole = getUserRole(user,'transaction')
-        return render(request = request,template_name = "transactionAll.html", context={"userRole":userRole})
+    user = User.objects.get(id=request.user.id)
+    userRole = getUserRole(user,'transaction')
+    return render(request, 'transactionAll.html', {'userRole': userRole})
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])   # require login via DRF auth/session
+def getTransactions(request):
+    """
+    Return all transactions as JSON, newest first.
+    """
+    qs = Transaction.objects.all().order_by('-date')
+    serializer = TransactionSerializer(qs, many=True)
+    return Response(serializer.data)
 
 @login_required
-def transactionListView(request,pk):
-    if request.method == 'GET':
-        user = User.objects.get(id=request.user.id)
-        userRole = getUserRole(user,'transaction')
-        if pk == '0':
-            tx = Transaction.objects.all()
-            project_name="All projects"
-        else:
-            tx = Transaction.objects.filter(project_id=pk)
-            project_name = Project.objects.get(id=pk).name
+def transactionListView(request, pk):
+    user = User.objects.get(id=request.user.id)
+    userRole = getUserRole(user,'transaction')
 
-        return render(request = request,template_name = "transaction_list.html",context={"transaction_list":tx, "userRole":userRole,'project_name':project_name})
+    tx, project_name = get_transactions_by_project(pk)
 
-@login_required
+    return render(request, "transaction_list.html", {
+        "transaction_list": tx,
+        "userRole": userRole,
+        "project_name": project_name,
+        "pk": pk
+    })
+    
+@login_required 
 def transactionAddView(request):
     user = User.objects.get(id=request.user.id)
+    bank_currency_map = {str(bank.id): bank.currency for bank in BankAccount.objects.all()}
+
     if request.method == 'GET':
         form = TransactionForm()
         form.fields['exType'].queryset = ExpenseType.objects.all()
         form.fields['bank'].queryset = BankAccount.objects.all()
         form.fields['owner'].queryset = User.objects.order_by('first_name')
 
-        return render(request = request,template_name = "transaction.html",context={"form":form})
+        return render(request = request,template_name = "transaction.html",context={"form":form, "bank_currency_map": bank_currency_map})
         
     if request.method == 'POST':
         form = TransactionForm(request.POST,request.FILES)
@@ -420,6 +525,9 @@ def transactionAddView(request):
                 obj=form.save(commit=False)
                 obj.updatedBy = user
                 obj.save()
+
+                # Recalculate the bank balance from the current transaction ledger.
+                bank = adjust_bank_balance(obj.bank)
 
                 if obj.receipt:
                     today = datetime.now()
@@ -439,6 +547,76 @@ def transactionAddView(request):
         else:
             error={'message':'Error'}
             return render(request,template_name='error.html',context=error)
+        
+def get_transactions_by_project(pk):
+    if pk == 0 or str(pk) == '0':
+        tx = Transaction.objects.all().order_by('-date')
+        project_name = "All projects"
+    else:
+        tx = Transaction.objects.filter(project_id=pk).order_by('-date')
+        project_name = Project.objects.get(id=pk).name
+
+    return tx, project_name
+
+#add a function to calc bank balance for each transactions
+#mark deleted transactions
+
+@login_required
+def transactionExcelView(request, pk):
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Transactions"
+
+    ws.append([
+        "ID", "Account", "Project", "Beneficiary",
+        "Action", "Expense", "Amount", "AmountLocal","Date",
+        "Status", "Owner", "Remarks"
+    ])
+
+    # ✅ reuse logic
+    transaction_list, _ = get_transactions_by_project(pk)
+
+    for t in transaction_list:
+        ws.append([
+            t.id,
+            t.bank.name,
+            t.project.name,
+            t.beneficiary.name,
+            str(t.txType),
+            str(t.exType),
+            float(t.amount),
+            float(t.amountLocal),
+            t.date.strftime("%Y-%m-%d"),
+            t.confirmed,
+            f"{t.owner.first_name} {t.owner.last_name}",
+            t.remarks
+        ])
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response['Content-Disposition'] = 'attachment; filename=transactions.xlsx'
+
+    wb.save(response)
+    return response
+
+@login_required
+def transactionPdfView(request, pk):    
+    transaction_list, _ = get_transactions_by_project(pk)
+
+    html_string = render_to_string(
+        'accounts/transaction_pdf.html',
+        {'data_list': transaction_list}
+    )
+
+    html = HTML(string=html_string)
+    pdf = html.write_pdf()
+
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="transactions.pdf"'
+
+    return response
+
 
 @login_required
 def transactionUpdView(request,pk):
@@ -446,13 +624,13 @@ def transactionUpdView(request,pk):
     tx = Transaction.objects.get(id=pk)  
     bank = BankAccount.objects.get(id=tx.bank_id)
     project = Project.objects.get(id = tx.project_id)
-
     if request.method == 'GET':
         form  = TransactionForm(instance = tx)
         form.fields['exType'].queryset = ExpenseType.objects.filter(prjType_id = project.prjType.id)
         form.fields['bank'].queryset = BankAccount.objects.all()
         form.fields['owner'].queryset = User.objects.order_by('first_name')
-        return render(request,template_name='common_form.html',context={'form':form, 'form_name':"Transaction "})
+        bank_currency_map = {str(bank.id): bank.currency for bank in BankAccount.objects.all()}
+        return render(request,template_name='common_form.html',context={'form':form, 'form_name':"Transaction ", 'bank_currency_map': bank_currency_map})
 
     if request.method == 'POST':
         form = TransactionForm(request.POST, request.FILES)
@@ -463,6 +641,9 @@ def transactionUpdView(request,pk):
             obj.bank = bank
             obj.id = tx.id
             obj.save()
+
+            # Recalculate the bank balance from the full transaction ledger.
+            new_bank = adjust_bank_balance(bank)
 
             if obj.receipt:
                     today = datetime.now()
@@ -478,12 +659,16 @@ def transactionUpdView(request,pk):
             error={'message':'Error in Data input to Minutes'}
             return render(request,template_name='error.html',context=error)
 
-    return redirect('accounts:transactionList',pk=0)
- 
+    return redirect('accounts:transactionList',pk=tx.project_id)
+# Revert balance changes when transaction is deleted
 @login_required
 def transactionDelView(request,pk):
     tx = Transaction.objects.filter(id=pk).first()
-    tx.delete()
+    if tx:
+        project_id = tx.project_id
+        tx.delete()
+        bank = adjust_bank_balance(tx.bank)
+        return redirect('accounts:transactionList',pk=project_id)
     return redirect('accounts:transactionList',pk=0)
 
 @api_view(['GET'])
@@ -534,7 +719,14 @@ def bankAccountUpdView(request,bk):
         return render(request,template_name='common_form.html',context={'form':form, 'form_name':form_name})
 
     if request.method == 'POST':
-        form = BankAccountForm(request.POST)
+        if bk=='x':
+            # Adding a new bank account
+            form = BankAccountForm(request.POST)
+        else:
+            # Updating existing bank account
+            bank = BankAccount.objects.get(id=bk)
+            form = BankAccountForm(request.POST, instance=bank)
+        
         if form.is_valid():
             obj=form.save(commit=False)
             obj.updatedBy_id = user.id
@@ -546,9 +738,11 @@ def bankAccountUpdView(request,bk):
         return redirect('accounts:bankAccountList')
 
 @login_required
+@login_required
 def bankAccountDelView(request,bk):
     tx = BankAccount.objects.filter(id=bk).first()
-    tx.delete()
+    if tx:
+        tx.delete()
     return redirect('accounts:bankAccountList')
     
 @login_required
@@ -614,11 +808,72 @@ def beneficiaryDelView(request,pk):
 def beneficiaryListView(request):
     user = User.objects.get(id=request.user.id)
     if request.method == 'GET':
-        data_list = Beneficiary.objects.all().exclude(id=14)
+        try:
+            data_list = Beneficiary.objects.all().exclude(id=14).order_by('-updatedOn')
+        except Exception:
+            # fallback if updatedOn field doesn't exist
+            data_list = Beneficiary.objects.all().exclude(id=14).order_by('-id')
         userRole=getUserRole(user,'beneficiary')
         print('userRole :'+userRole)
         context={ 'data_list':data_list, 'userRole':userRole}
         return render(request = request,template_name = "beneficiary_list.html",context=context)
+
+
+def beneficiaryExcelView(request):
+    user = User.objects.get(id=request.user.id)
+    if request.method == 'GET':
+        try:
+            data_list = Beneficiary.objects.all().exclude(id=14).order_by('-updatedOn')
+        except Exception:
+            # fallback if updatedOn field doesn't exist
+            data_list = Beneficiary.objects.all().exclude(id=14).order_by('-id')
+    
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Beneficiaries"
+
+    ws.append([
+        "ID", "Name", "Recomender", "Category",
+        "School", "Grade", "Amount"
+    ])       
+
+    for b in data_list:
+        ws.append([
+            b.id,
+            b.name,
+            b.recommender,
+            b.category,
+            b.school,
+            b.grade,
+            float(b.amount)
+        ])
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response['Content-Disposition'] = 'attachment; filename=beneficiaries.xlsx'
+
+    wb.save(response)
+    return response
+
+@login_required
+def beneficiaryPdfView(request):
+    data = Beneficiary.objects.all()
+
+    html_string = render_to_string(
+        'accounts/beneficiary_pdf.html',
+        {'data_list': data}
+    )
+
+    html = HTML(string=html_string)
+    pdf = html.write_pdf()
+
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="beneficiaries.pdf"'
+
+    return response
+
 
 def beneficiaryDetailView(request,pk):
     if request.method == 'GET':
@@ -630,7 +885,7 @@ def beneficiaryDetailView(request,pk):
 def calcFinanceReport():
     transaction = read_frame(Transaction.objects.all())
     txs = transaction.loc[:,['txType','date','amount']]
-    txs['year'] = DateUtils.cv2Year(txs['date'])
+    txs['year'] = DateUtil.cv2Year(txs['date'])
     
     px = txs.groupby(['txType']).sum().reset_index()
     px.fillna(0)
