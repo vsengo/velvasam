@@ -23,8 +23,21 @@ Phase 3 (May-June):
 2. Update existing data to reflect multi-currency
     - There are few projects have remarks about this information.
 
-Phase 4 (July-Aug)
+Phase 4 (Aug-Sept)
+5. Add a button "Transaction" to be able to see all transactions of the Bank account.
+    - This will show all Deposits, interests and Widthrawal across all projects from that Bank-account.
+6. When a Transaction button is opened from Project, make that project as default in the form and disable choosing Project.
+    - Also add the project name to the Title.
+7. Bug: On Beneficiary screen show the Amount in Amount LKR only. Currently showing in the bank currency.
+8. Fix Reset Password screen to use Amazon SES Api to send email to reset pwd.
+9. Add a screen to approve/reject new members for the site.
+    -Administrator has to approve the account to view information.
+
+Phase 5: (Sept - Oct)
 5. Allow Beneficiaries table to handle group. 
     - Ability to group beneficiaries into single group 
 6. Allow photo uploads and show that in Home page.
 7. Create login for each donor and donor able to see the funded transactions.
+
+Upgrades/Deprecation : 
+May 2027 (Lightsail Blueprint decom.)
