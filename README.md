@@ -30,8 +30,9 @@ Phase 4 (Aug-Sept)
     - Also add the project name to the Title.
 7. Bug: On Beneficiary screen show the Amount in Amount LKR only. Currently showing in the bank currency.
 8. Fix Reset Password screen to use Amazon SES Api to send email to reset pwd.
-9. Add a screen to approve/reject new members for the site.
-    -Administrator has to approve the account to view information.
+9. When a new Member is added, send email to Admin to approve member permissions.
+     View Project, transaction, beneficiary and reports.
+
 
 Phase 5: (Sept - Oct)
 5. Allow Beneficiaries table to handle group. 
