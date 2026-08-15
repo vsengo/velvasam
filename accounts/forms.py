@@ -107,7 +107,7 @@ class MinuteForm(forms.ModelForm):
 class TransactionForm(forms.ModelForm):
     exType=forms.ModelChoiceField(queryset=ExpenseType.objects.filter())
     owner=MemberChoiceField(queryset=User.objects.filter())
-    beneficiary=BeneficiaryChoiceField(queryset=Beneficiary.objects.filter())
+    beneficiary=BeneficiaryChoiceField(queryset=Beneficiary.objects.filter(status='Active'))
 
     class Meta:
         model = Transaction
