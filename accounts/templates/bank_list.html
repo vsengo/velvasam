@@ -53,6 +53,7 @@
                         <th scope="col">Balance</th>                       
                         <th scope="col">UpdatedOn</th>
                         {% if userRole == 'EDIT' %}
+                        <th scope="col">Transactions</th>
                         <th scope="col">Update </th>
                         <th scope="col">Delete </th>
                         {% endif %} 
@@ -71,9 +72,10 @@
                         <td>{{bank.balance|floatformat:"-3g"}}</td>    
                         <td>{{bank.updatedOn}}</td>
                         {% if userRole == 'EDIT' %}
-                        <td><a href="{% url 'accounts:bankAccountUpd' bank.id %}" class="btn btn-danger btn-md">Edit</a></td>
+                        <td><a href="{% url 'accounts:bankAccountTx' bank.id %}" class="btn btn-secondary btn-sm">Transactions</a></td>
+                        <td><a href="{% url 'accounts:bankAccountUpd' bank.id %}" class="btn btn-primary btn-sm">Edit</a></td>
                         <td>
-                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ bank.id }}">
+                            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ bank.id }}">
                                 Delete
                             </button>
                         </td>

@@ -137,13 +137,22 @@ class Beneficiary(models.Model):
         ('Patient','Patient'),
         ('Poverty','Poverty'),
     ]
+    STATUS = [
+        ('Active','Active'),
+        ('Inactive','Inactive'),
+    ]
+    FREQUENCY = [
+        ('OneTime','One Time'),
+        ('Monthly','Monthly'),
+        ('Quarterly','Quarterly'),
+    ]
     name =models.CharField(max_length=32)
     mobile=models.CharField(max_length=16,null=True,blank=-True)
     school = models.CharField(max_length=32,null=True,blank=-True)
     grade = models.CharField(max_length=16,null=True,blank=-True)
-    account = models.CharField(max_length=32)
-    bank=models.CharField(max_length=16)
-    branch=models.CharField(max_length=16)
+    account = models.CharField(max_length=32,null=True,blank=-True)
+    bank=models.CharField(max_length=16,null=True,blank=-True)
+    branch=models.CharField(max_length=16,null=True,blank=-True)
     accountHolder = models.CharField(max_length=32)
     holderMobile = models.CharField(max_length=16,null=True,blank=-True)
     parent = models.CharField(max_length=32,null=True,blank=-True)
@@ -154,9 +163,13 @@ class Beneficiary(models.Model):
     principalMobile = models.CharField(max_length=16,null=True,blank=-True)
     remarks  = models.CharField(max_length=1000,null=True,blank=-True)
     startDate = models.DateField(default=timezone.now)
-    endDate = models.DateField(null=True,blank=-True)
+    endDate = models.DateField(default=timezone.now)
+    frequency = models.CharField(max_length=16,choices=FREQUENCY,default='OneTime')
     sponsor = models.CharField(max_length=32,null=True,blank=True)
     recommender = models.CharField(max_length=32,null=True,blank=True)
+    status = models.CharField(max_length=8,choices=STATUS,default='Active')
+    updatedBy = models.ForeignKey(User,on_delete=models.PROTECT) 
+    updatedOn = models.DateTimeField(default=timezone.now)
     
 
 class Transaction(models.Model):
@@ -176,7 +189,7 @@ class Transaction(models.Model):
         ('Confirmed',"Confirmed"),
     ]
     def get_default_beneficiary():
-        return Beneficiary.objects.get(id=14).id
+        return Beneficiary.objects.get(id=17).id
 
     bank = models.ForeignKey(BankAccount, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
@@ -184,7 +197,7 @@ class Transaction(models.Model):
     txType  = models.CharField(max_length=10,choices=TXTYPE)
     exType  = models.ForeignKey(ExpenseType, on_delete=models.CASCADE)
     remarks = models.TextField(max_length=100,blank=True,null=True)
-    beneficiary = models.ForeignKey(Beneficiary,on_delete=models.CASCADE, default=get_default_beneficiary)
+    beneficiary = models.ForeignKey(Beneficiary,on_delete=models.CASCADE)
     amount = models.IntegerField(default=0)
     date    = models.DateField(default=timezone.now)
     receipt = models.FileField(upload_to='transaction/%Y',null=True,blank=True)
