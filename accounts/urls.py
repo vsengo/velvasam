@@ -4,7 +4,7 @@ from django.urls import path,re_path,include
 from .views import  SignUpView, deleteMember, logOff, logIn, memberView, projectAddView,projectListView,projectDelView,ProjectUpd, change_password
 from .views import committeeAddView, CommitteeUpd, committeeDelView,committeeListView, minuteAddView, minuteDelView, minuteListView, minuteUpdView
 from .views import transactionAddView, transactionDelView, transactionListView,transactionUpdView, memberUpdView, transactionExcelView, transactionPdfView
-from .views import bankAccountListView, bankAccountAddView, bankAccountDelView, bankAccountUpdView
+from .views import bankAccountListView, bankAccountAddView, bankAccountDelView, bankAccountUpdView, bankAccountTxView
 from .views import bankAccountSummary, deleteMember, pwdResetInstruction, beneficiaryListView
 from .views import getTransactions, transactionAllView, beneficiaryAddView, beneficiaryDelView,beneficiaryUpdView
 from .views import beneficiaryDetailView, projectClosedListView, beneficiaryTableView, getBeneficiary, beneficiaryExcelView, beneficiaryPdfView
@@ -45,6 +45,7 @@ urlpatterns = [
     re_path(r'bankAccountAdd', bankAccountAddView, name='bankAccountAdd'),
     re_path(r'bankAccountDel(?P<bk>\d+)', bankAccountDelView, name='bankAccountDel'),
     re_path(r'bankAccountUpd(?P<bk>\d+)', bankAccountUpdView, name='bankAccountUpd'),
+    re_path(r'bankAccountTx(?P<bk>\d+)', bankAccountTxView, name='bankAccountTx'),
 
     re_path(r'transactionAll', transactionAllView, name='transactionAll'),
     re_path(r'transactionList(?P<pk>\d+)', transactionListView, name='transactionList'),

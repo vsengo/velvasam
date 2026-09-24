@@ -13,7 +13,7 @@ if [ $1 = 'install' ]; then
 	if [ -f $app_name.tar ]; then
 		rm -f $app_name.tar
 	fi
-	tar -cvf $app_name.tar accounts home reports util velvasam db.sqlite3 manage.py requirements.txt
+	tar -cvf $app_name.tar --exclude=home/static/js accounts home reports util velvasam db.sqlite3 manage.py requirements.txt
 	gzip $app_name.tar
 	
 	scp -v -i $keyDir $app_name.tar.gz  ${USER}@${IP}:~/velvasam/bkup/.
@@ -25,7 +25,7 @@ elif [ $1 = 'putData' ]; then
 	   echo "Please provide a tar file"
 	   exit 1
 	fi
-	scp -v -i $keyDir $2 ${USER}@${IP}:~/velvasam/.
+	scp -v -i $keyDir $2 ${USER}@${IP}:~/velvasam/bkup/.
 elif [ $1 = 'getFile' ]; then
 	scp -v -i $keyDir ${USER}@${IP}:~/velvasam/$2  bkup/$2
 else

@@ -250,7 +250,6 @@ def projectListView(request):
     if request.method == 'GET':
         calculate()
         projects = Project.objects.exclude(status=Project.COMPLETED).order_by('-updatedOn')
-        #projects = Project.objects.filter(/* your filters */).order_by('-updatedOn')
         user = User.objects.get(id=request.user.id)
         userRole=getUserRole(user,'project')
         return render(request = request,template_name = "project_list.html",context={'project_list':projects, 'userRole':userRole})
@@ -755,6 +754,18 @@ def bankAccountListView(request):
         return render(request = request,template_name = "bank_list.html",context=context)
 
 @login_required
+def bankAccountTxView(request,bk):
+    userRole = getUserRole(request.user,'transaction')
+    if request.method == 'GET':
+        tx = Transaction.objects.filter(bank_id=bk).order_by('-date')
+        return render(request, "transaction_list.html", context={
+                "transaction_list": tx,
+                "userRole": userRole,
+                "project_name": "ALL projects",
+                "pk": 0
+            })
+
+@login_required
 def memberList(request):
     return render(request,'member_list.html')
 
@@ -801,7 +812,8 @@ def beneficiaryUpdView(request,pk):
 @login_required
 def beneficiaryDelView(request,pk):
     tx = Beneficiary.objects.get(id=pk)
-    tx.delete()
+    tx.status = "Inactive"
+    tx.save()
     return redirect('accounts:beneficiaryList')
 
 @login_required
@@ -809,10 +821,10 @@ def beneficiaryListView(request):
     user = User.objects.get(id=request.user.id)
     if request.method == 'GET':
         try:
-            data_list = Beneficiary.objects.all().exclude(id=14).order_by('-updatedOn')
+            data_list = Beneficiary.objects.filter(status='Active').order_by('-updatedOn')
         except Exception:
             # fallback if updatedOn field doesn't exist
-            data_list = Beneficiary.objects.all().exclude(id=14).order_by('-id')
+            data_list = Beneficiary.objects.filter(status='Active').order_by('-id')
         userRole=getUserRole(user,'beneficiary')
         print('userRole :'+userRole)
         context={ 'data_list':data_list, 'userRole':userRole}
