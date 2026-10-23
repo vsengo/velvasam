@@ -29,16 +29,23 @@ Phase 4 (Aug-Sept)
 6. When a Transaction button is opened from Project, make that project as default in the form and disable choosing Project.
     - Also add the project name to the Title.
 7. Bug: On Beneficiary screen show the Amount in Amount LKR only. Currently showing in the bank currency.
+
 8. Fix Reset Password screen to use Amazon SES Api to send email to reset pwd.
 9. When a new Member is added, send email to Admin to approve member permissions.
      View Project, transaction, beneficiary and reports.
-
+10. Create login for each donor and donor able to see the funded transactions.
 
 Phase 5: (Sept - Oct)
-5. Allow Beneficiaries table to handle group. 
+11. Expense Reporting
+    - Contribution Vs Distributions for all projects and individual projects
+    - Annual contribution vs distribution for all projects (by year)
+    - Number of students, patients benefited
+
+Phase 6: (Nov-Dec)
+12. Allow Beneficiaries table to handle group. 
     - Ability to group beneficiaries into single group 
-6. Allow photo uploads and show that in Home page.
-7. Create login for each donor and donor able to see the funded transactions.
+13. Allow photo uploads and show that in Home page.
+ 
 
 Upgrades/Deprecation : 
 May 2027 (Lightsail Blueprint decom.)

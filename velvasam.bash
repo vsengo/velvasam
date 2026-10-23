@@ -19,7 +19,7 @@ if [ $1 = 'install' ]; then
 	scp -v -i $keyDir $app_name.tar.gz  ${USER}@${IP}:~/velvasam/bkup/.
 	ssh -v -i $keyDir  ${USER}@${IP}
 elif [ $1 = 'getDb' ]; then
-	scp -v -i $keyDir ${USER}@${IP}:~/velvasam/db.sqlite3  bkupdb_aws.sqlite3
+	scp -v -i $keyDir ${USER}@${IP}:~/velvasam/db.sqlite3  db.sqlite3
 elif [ $1 = 'putData' ]; then
 	if [ $# -lt 2 ]; then
 	   echo "Please provide a tar file"

@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 import os
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from django.core.exceptions import ImproperlyConfigured
 from pathlib import Path
 
@@ -139,5 +143,15 @@ MEDIA_URL = '/media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-SENDGRID_SANDBOX_MODE_IN_DEBUG = False
-EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'
+# Amazon SES configuration
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_SES_REGION_NAME = os.environ.get('AWS_SES_REGION_NAME')
+AWS_SES_REGION_ENDPOINT = os.environ.get('AWS_SES_REGION_ENDPOINT')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL')
+
+# Use SES backend when AWS credentials are configured; otherwise use console backend for local testing.
+if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
+    EMAIL_BACKEND = 'django_ses.SESBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

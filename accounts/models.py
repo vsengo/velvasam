@@ -189,7 +189,7 @@ class Transaction(models.Model):
         ('Confirmed',"Confirmed"),
     ]
     def get_default_beneficiary():
-        return Beneficiary.objects.get(id=17).id
+        return Beneficiary.objects.get(id=1).id
 
     bank = models.ForeignKey(BankAccount, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
@@ -197,7 +197,7 @@ class Transaction(models.Model):
     txType  = models.CharField(max_length=10,choices=TXTYPE)
     exType  = models.ForeignKey(ExpenseType, on_delete=models.CASCADE)
     remarks = models.TextField(max_length=100,blank=True,null=True)
-    beneficiary = models.ForeignKey(Beneficiary,on_delete=models.CASCADE)
+    beneficiary = models.ForeignKey(Beneficiary,on_delete=models.CASCADE, default=get_default_beneficiary)
     amount = models.IntegerField(default=0)
     date    = models.DateField(default=timezone.now)
     receipt = models.FileField(upload_to='transaction/%Y',null=True,blank=True)
