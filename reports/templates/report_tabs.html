@@ -1,0 +1,22 @@
+<nav class="container pt-3" aria-label="Dashboard reports">
+  <ul class="nav nav-tabs">
+    <li class="nav-item">
+      <a
+        class="nav-link{% if active_tab == 'contributionDistribution' %} active{% endif %}"
+        {% if active_tab == 'contributionDistribution' %}aria-current="page"{% endif %}
+        href="{% url 'reports:contributionDistribution' %}">Contribution &amp; Distribution</a>
+    </li>
+    <li class="nav-item">
+      <a
+        class="nav-link{% if active_tab == 'annualContribution' %} active{% endif %}"
+        {% if active_tab == 'annualContribution' %}aria-current="page"{% endif %}
+        href="{% url 'reports:annualContribution' %}">Annual Contribution</a>
+    </li>
+    <li class="nav-item">
+      <a
+        class="nav-link{% if active_tab == 'beneficiariesReport' %} active{% endif %}"
+        {% if active_tab == 'beneficiariesReport' %}aria-current="page"{% endif %}
+        href="{% url 'reports:beneficiariesReport' %}">Beneficiaries Report</a>
+    </li>
+  </ul>
+</nav>

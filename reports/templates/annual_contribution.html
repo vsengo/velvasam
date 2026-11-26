@@ -1,0 +1,69 @@
+{% extends 'home/base.html' %}
+{% load humanize %}
+{% block content %}
+{% include 'report_tabs.html' with active_tab='annualContribution' %}
+<main class="container py-4">
+  <h1 class="h2 mb-4">Annual Contribution by Category</h1>
+  {% if categories %}
+  <div class="row g-4 align-items-center">
+    <div class="col-12 col-lg-7">
+      <div style="position: relative; height: 400px;">
+        <canvas id="annual-contribution-chart" role="img" aria-label="Annual contribution totals by category"></canvas>
+      </div>
+    </div>
+    <div class="col-12 col-lg-5">
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th scope="col">Category</th>
+              <th scope="col" class="text-end">Amount (LKR)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for category in categories %}
+            <tr>
+              <td>{{ category.name }}</td>
+              <td class="text-end">{{ category.amount|floatformat:2|intcomma }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <p class="alert alert-info">No annual contribution data is available yet.</p>
+  {% endif %}
+</main>
+{{ chart_data|json_script:"annual-contribution-data" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+<script>
+  const reportData = JSON.parse(document.getElementById("annual-contribution-data").textContent);
+  const chartElement = document.getElementById("annual-contribution-chart");
+  if (chartElement) {
+    new Chart(chartElement, {
+      type: "pie",
+      data: {
+        labels: reportData.labels,
+        datasets: [{
+          label: "Amount (LKR)",
+          data: reportData.values
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: "bottom" },
+          tooltip: {
+            callbacks: {
+              label: context => `${context.label}: LKR ${new Intl.NumberFormat("en-LK", { maximumFractionDigits: 2 }).format(context.parsed)}`
+            }
+          }
+        }
+      }
+    });
+  }
+</script>
+{% endblock %}

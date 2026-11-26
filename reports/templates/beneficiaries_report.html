@@ -1,0 +1,105 @@
+{% extends 'home/base.html' %}
+{% block content %}
+{% include 'report_tabs.html' with active_tab='beneficiariesReport' %}
+<main class="container py-4">
+  <h1 class="h2 mb-4">Beneficiaries Report</h1>
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-md-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h6 text-muted">Total Beneficiaries</h2>
+          <p class="display-6 mb-0">{{ total_beneficiaries }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h6 text-muted">Active</h2>
+          <p class="display-6 mb-0">{{ active_beneficiaries }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h6 text-muted">Inactive</h2>
+          <p class="display-6 mb-0">{{ inactive_beneficiaries }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 align-items-center">
+    <div class="col-12 col-lg-7">
+      <div style="position: relative; height: 400px;">
+        <canvas id="beneficiaries-chart" role="img" aria-label="Active and inactive beneficiaries by category"></canvas>
+      </div>
+    </div>
+    <div class="col-12 col-lg-5">
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th scope="col">Category</th>
+              <th scope="col" class="text-end">Active</th>
+              <th scope="col" class="text-end">Inactive</th>
+              <th scope="col" class="text-end">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for category in categories %}
+            <tr>
+              <th scope="row">{{ category.name }}</th>
+              <td class="text-end">{{ category.active }}</td>
+              <td class="text-end">{{ category.inactive }}</td>
+              <td class="text-end">{{ category.total }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% if not total_beneficiaries %}
+  <p class="alert alert-info mt-3">No beneficiary records are available yet.</p>
+  {% endif %}
+</main>
+{{ chart_data|json_script:"beneficiaries-report-data" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+<script>
+  const reportData = JSON.parse(document.getElementById("beneficiaries-report-data").textContent);
+  const chartElement = document.getElementById("beneficiaries-chart");
+  if (chartElement) {
+    new Chart(chartElement, {
+      type: "bar",
+      data: {
+        labels: reportData.labels,
+        datasets: [
+          {
+            label: "Active",
+            data: reportData.active,
+            backgroundColor: "rgba(25, 135, 84, 0.75)"
+          },
+          {
+            label: "Inactive",
+            data: reportData.inactive,
+            backgroundColor: "rgba(108, 117, 125, 0.75)"
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { precision: 0 },
+            title: { display: true, text: "Number of beneficiaries" }
+          }
+        }
+      }
+    });
+  }
+</script>
+{% endblock %}

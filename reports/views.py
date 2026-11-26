@@ -1,16 +1,57 @@
 from django.shortcuts import render
 from  django_pandas.io import read_frame
-from django.http import JsonResponse
-from django.db.models import Q
+from django.http import Http404, JsonResponse
+from django.db.models import Count, Q, Sum
+from django.db.models.functions import TruncYear
 import pandas as pd
-from accounts.models import Transaction
+from accounts.models import Beneficiary, Project, Transaction
 from .models import ReportByMonth
 import datetime as dt
 import util.date as du
 
 def reportMonthly(request):
-        return render(request, 'charts.html')
+    projects = Project.objects.order_by('name')
+    selected_project_id = request.GET.get('project', '')
+    transactions = Transaction.objects.all()
+    selected_project = None
 
+    if selected_project_id:
+        try:
+            selected_project_id = int(selected_project_id)
+        except ValueError as exc:
+            raise Http404("Project not found") from exc
+
+        selected_project = projects.filter(pk=selected_project_id).first()
+        if selected_project is None:
+            raise Http404("Project not found")
+        transactions = transactions.filter(project=selected_project)
+
+    contribution_type = Q(exType__expense__icontains='Contribution')
+    yearly_totals = (
+        transactions.annotate(year=TruncYear('date'))
+        .values('year')
+        .annotate(
+            contribution=Sum('amountLocal', filter=contribution_type),
+            distribution=Sum('amountLocal', filter=~contribution_type),
+        )
+        .order_by('year')
+    )
+    chart_data = {
+        'labels': [row['year'].year for row in yearly_totals],
+        'contributions': [float(row['contribution'] or 0) for row in yearly_totals],
+        'distributions': [float(row['distribution'] or 0) for row in yearly_totals],
+        'title': (
+            f"Contribution vs Distributions - {selected_project.name}"
+            if selected_project
+            else 'Contribution vs Distributions - All Projects'
+        ),
+    }
+
+    return render(request, 'charts.html', {
+        'projects': projects,
+        'selected_project': selected_project,
+        'chart_data': chart_data,
+    })
 def data_monthly(request):
     yy = dt.datetime.today().replace(day=1)
 
@@ -124,6 +165,51 @@ def data_monthlyAvg(request):
 
     return JsonResponse(chart)
 
+def annualContribution(request):
+    totals = (
+        ReportByMonth.objects.values('exType')
+        .annotate(total=Sum('amount'))
+        .order_by('exType')
+    )
+    categories = [
+        {'name': row['exType'], 'amount': float(row['total'])}
+        for row in totals
+    ]
 
-   
+    return render(request, 'annual_contribution.html', {
+        'categories': categories,
+        'chart_data': {
+            'labels': [category['name'] for category in categories],
+            'values': [category['amount'] for category in categories],
+        },
+    })
+def beneficiariesReport(request):
+    counts_by_category = {
+        row['category']: row
+        for row in Beneficiary.objects.values('category').annotate(
+            active=Count('id', filter=Q(status='Active')),
+            inactive=Count('id', filter=Q(status='Inactive')),
+            total=Count('id'),
+        )
+    }
+    categories = [
+        {
+            'name': category,
+            'active': counts_by_category.get(category, {}).get('active', 0),
+            'inactive': counts_by_category.get(category, {}).get('inactive', 0),
+            'total': counts_by_category.get(category, {}).get('total', 0),
+        }
+        for category, _ in Beneficiary.CATEGORY
+    ]
 
+    return render(request, 'beneficiaries_report.html', {
+        'categories': categories,
+        'chart_data': {
+            'labels': [category['name'] for category in categories],
+            'active': [category['active'] for category in categories],
+            'inactive': [category['inactive'] for category in categories],
+        },
+        'total_beneficiaries': sum(category['total'] for category in categories),
+        'active_beneficiaries': sum(category['active'] for category in categories),
+        'inactive_beneficiaries': sum(category['inactive'] for category in categories),
+    })
