@@ -2,7 +2,7 @@
 {% block content %}
 {% include 'report_tabs.html' with active_tab='annualContributionDistribution' %}
 <main class="container py-4">
-  <h1 class="h2 mb-2">Annual Contribution vs Distribution</h1>
+  <h1 class="h3 mb-2">Annual Contribution vs Distribution</h1>
   <p class="text-muted mb-4">All projects, by year. Amounts are shown in LKR.</p>
   {% if chart_data.labels %}
   <div style="position: relative; height: min(60vh, 500px); min-height: 300px;">

@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from  django_pandas.io import read_frame
 from django.http import Http404, JsonResponse
-from django.db.models import Count, Q, Sum
-from django.db.models.functions import TruncYear
+from django.db.models import Case, Count, F, IntegerField, Q, Sum, When
+from django.db.models.functions import TruncYear, Trim
 import pandas as pd
 from accounts.models import Beneficiary, Project, Transaction
 from .models import ReportByMonth
@@ -11,13 +11,23 @@ import util.date as du
 
 
 def _yearly_contribution_distribution(transactions):
-    contribution_type = Q(exType__expense__icontains='Contribution')
+    contribution_type = Q(
+        txType=Transaction.TxType_DEPOSIT,
+        exType__expense__in=('Contribution', 'Monthly Contribution'),
+    )
     yearly_totals = (
-        transactions.annotate(year=TruncYear('date'))
+        transactions.annotate(
+            year=TruncYear('date'),
+            amount_lkr=Case(
+                When(amountLocal=0, then=F('amount')),
+                default=F('amountLocal'),
+                output_field=IntegerField(),
+            ),
+        )
         .values('year')
         .annotate(
-            contribution=Sum('amountLocal', filter=contribution_type),
-            distribution=Sum('amountLocal', filter=~contribution_type),
+            contribution=Sum('amount_lkr', filter=contribution_type),
+            distribution=Sum('amount_lkr', filter=~contribution_type),
         )
         .order_by('year')
     )
@@ -182,15 +192,21 @@ def data_monthlyAvg(request):
     return JsonResponse(chart)
 
 def annualContribution(request):
+    contribution_transactions = Transaction.objects.filter(
+        txType=Transaction.TxType_DEPOSIT,
+        exType__expense__in=('Contribution', 'Monthly Contribution'),
+    )
     years = list(
-        ReportByMonth.objects.order_by()
+        contribution_transactions.annotate(year=TruncYear('date'))
         .values_list('year', flat=True)
         .distinct()
         .order_by('-year')
     )
-    selected_year = years[0] if years else None
+    years = [year.year for year in years]
+    all_years_selected = request.GET.get('year') == 'all'
+    selected_year = years[0] if years and not all_years_selected else None
     requested_year = request.GET.get('year')
-    if requested_year:
+    if requested_year and not all_years_selected:
         try:
             requested_year = int(requested_year)
         except ValueError as exc:
@@ -199,19 +215,32 @@ def annualContribution(request):
             raise Http404("Year not found")
         selected_year = requested_year
 
+    report_rows = contribution_transactions.annotate(
+        year=TruncYear('date'),
+        amount_lkr=Case(
+            When(amountLocal=0, then=F('amount')),
+            default=F('amountLocal'),
+            output_field=IntegerField(),
+        ),
+    )
+    if selected_year is not None:
+        report_rows = report_rows.filter(date__year=selected_year)
+    elif not all_years_selected:
+        report_rows = report_rows.none()
     totals = (
-        ReportByMonth.objects.filter(year=selected_year).values('exType')
-        .annotate(total=Sum('amount'))
-        .order_by('exType')
-    ) if selected_year is not None else []
+        report_rows.values('exType__expense')
+        .annotate(total=Sum('amount_lkr'))
+        .order_by('exType__expense')
+    )
     categories = [
-        {'name': row['exType'], 'amount': float(row['total'])}
+        {'name': row['exType__expense'], 'amount': float(row['total'] or 0)}
         for row in totals
     ]
 
     return render(request, 'annual_contribution.html', {
         'years': years,
         'selected_year': selected_year,
+        'all_years_selected': all_years_selected,
         'categories': categories,
         'chart_data': {
             'labels': [category['name'] for category in categories],
@@ -221,17 +250,40 @@ def annualContribution(request):
 
 
 def expenseByCategory(request):
+    years = list(
+        ReportByMonth.objects.order_by()
+        .values_list('year', flat=True)
+        .distinct()
+        .order_by('-year')
+    )
+    requested_year = request.GET.get('year')
+    selected_year = None
+    if requested_year and requested_year != 'all':
+        try:
+            selected_year = int(requested_year)
+        except ValueError as exc:
+            raise Http404("Year not found") from exc
+        if selected_year not in years:
+            raise Http404("Year not found")
+
+    report_rows = ReportByMonth.objects.all()
+    if selected_year is not None:
+        report_rows = report_rows.filter(year=selected_year)
     totals = (
-        ReportByMonth.objects.values('exType')
+        report_rows.annotate(category=Trim('exType'))
+        .exclude(category__in=('Contribution', 'Monthly Contribution'))
+        .values('category')
         .annotate(total=Sum('amount'))
-        .order_by('exType')
+        .order_by('category')
     )
     categories = [
-        {'name': row['exType'].strip(), 'amount': float(row['total'] or 0)}
+        {'name': row['category'], 'amount': float(row['total'] or 0)}
         for row in totals
     ]
 
     return render(request, 'expense_by_category.html', {
+        'years': years,
+        'selected_year': selected_year,
         'categories': categories,
         'chart_data': {
             'labels': [category['name'] for category in categories],

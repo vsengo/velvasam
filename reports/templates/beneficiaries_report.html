@@ -2,16 +2,8 @@
 {% block content %}
 {% include 'report_tabs.html' with active_tab='beneficiariesReport' %}
 <main class="container py-4">
-  <h1 class="h2 mb-4">Beneficiaries Report</h1>
+  <h1 class="h3 mb-3">Beneficiaries Report</h1>
   <div class="row g-3 mb-4">
-    <div class="col-12 col-md-4">
-      <div class="card h-100">
-        <div class="card-body">
-          <h2 class="h6 text-muted">Total Beneficiaries</h2>
-          <p class="display-6 mb-0">{{ total_beneficiaries }}</p>
-        </div>
-      </div>
-    </div>
     <div class="col-12 col-md-4">
       <div class="card h-100">
         <div class="card-body">
@@ -23,8 +15,16 @@
     <div class="col-12 col-md-4">
       <div class="card h-100">
         <div class="card-body">
-          <h2 class="h6 text-muted">Inactive</h2>
+          <h2 class="h6 text-muted">Past</h2>
           <p class="display-6 mb-0">{{ inactive_beneficiaries }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h6 text-muted">Total Beneficiaries</h2>
+          <p class="display-6 mb-0">{{ total_beneficiaries }}</p>
         </div>
       </div>
     </div>
@@ -33,7 +33,7 @@
   <div class="row g-4 align-items-center">
     <div class="col-12 col-lg-7">
       <div style="position: relative; height: 400px;">
-        <canvas id="beneficiaries-chart" role="img" aria-label="Active and inactive beneficiaries by category"></canvas>
+        <canvas id="beneficiaries-chart" role="img" aria-label="Active and past beneficiaries by category"></canvas>
       </div>
     </div>
     <div class="col-12 col-lg-5">
@@ -43,7 +43,7 @@
             <tr>
               <th scope="col">Category</th>
               <th scope="col" class="text-end">Active</th>
-              <th scope="col" class="text-end">Inactive</th>
+              <th scope="col" class="text-end">Past</th>
               <th scope="col" class="text-end">Total</th>
             </tr>
           </thead>
@@ -82,7 +82,7 @@
             backgroundColor: "rgba(25, 135, 84, 0.75)"
           },
           {
-            label: "Inactive",
+            label: "Past",
             data: reportData.inactive,
             backgroundColor: "rgba(108, 117, 125, 0.75)"
           }

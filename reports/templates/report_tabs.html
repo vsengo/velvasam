@@ -8,12 +8,6 @@
     </li>
     <li class="nav-item">
       <a
-        class="nav-link{% if active_tab == 'annualContributionDistribution' %} active{% endif %}"
-        {% if active_tab == 'annualContributionDistribution' %}aria-current="page"{% endif %}
-        href="{% url 'reports:annualContributionDistribution' %}">Annual Contribution &amp; Distribution</a>
-    </li>
-    <li class="nav-item">
-      <a
         class="nav-link{% if active_tab == 'annualContribution' %} active{% endif %}"
         {% if active_tab == 'annualContribution' %}aria-current="page"{% endif %}
         href="{% url 'reports:annualContribution' %}">Contribution by Category</a>

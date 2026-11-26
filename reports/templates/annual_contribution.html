@@ -3,10 +3,15 @@
 {% block content %}
 {% include 'report_tabs.html' with active_tab='annualContribution' %}
 <main class="container py-4">
-  <h1 class="h2 mb-4">Annual Contribution by Category{% if selected_year %} - {{ selected_year }}{% endif %}</h1>
-  {% if years %}
+  <h1 class="h3 mb-3">Annual Contribution by Category{% if all_years_selected %} - All Years{% elif selected_year %} - {{ selected_year }}{% endif %}</h1>
   <nav aria-label="Annual contribution by year" class="mb-4">
     <ul class="nav nav-tabs">
+      <li class="nav-item">
+        <a
+          class="nav-link{% if all_years_selected %} active{% endif %}"
+          {% if all_years_selected %}aria-current="page"{% endif %}
+          href="?year=all">All years</a>
+      </li>
       {% for year in years %}
       <li class="nav-item">
         <a
@@ -17,7 +22,6 @@
       {% endfor %}
     </ul>
   </nav>
-  {% endif %}
   {% if categories %}
   <div class="row g-4 align-items-center">
     <div class="col-12 col-lg-7">
