@@ -1,0 +1,62 @@
+{% extends 'home/base.html' %}
+{% block content %}
+{% include 'report_tabs.html' with active_tab='annualContributionDistribution' %}
+<main class="container py-4">
+  <h1 class="h2 mb-2">Annual Contribution vs Distribution</h1>
+  <p class="text-muted mb-4">All projects, by year. Amounts are shown in LKR.</p>
+  {% if chart_data.labels %}
+  <div style="position: relative; height: min(60vh, 500px); min-height: 300px;">
+    <canvas id="annual-contribution-distribution-chart"
+      role="img"
+      aria-label="Annual contribution and distribution totals for all projects in LKR"></canvas>
+  </div>
+  {% else %}
+  <p class="alert alert-info">No transaction data is available yet.</p>
+  {% endif %}
+</main>
+{{ chart_data|json_script:"annual-contribution-distribution-data" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+<script>
+  const reportData = JSON.parse(document.getElementById("annual-contribution-distribution-data").textContent);
+  const chartElement = document.getElementById("annual-contribution-distribution-chart");
+  if (chartElement) {
+    const lkr = new Intl.NumberFormat("en-LK", { maximumFractionDigits: 2 });
+    new Chart(chartElement, {
+      type: "bar",
+      data: {
+        labels: reportData.labels,
+        datasets: [
+          {
+            label: "Contribution",
+            data: reportData.contributions,
+            backgroundColor: "rgba(25, 135, 84, 0.75)"
+          },
+          {
+            label: "Distribution",
+            data: reportData.distributions,
+            backgroundColor: "rgba(220, 53, 69, 0.75)"
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: "Amount (LKR)" },
+            ticks: { callback: value => `LKR ${lkr.format(value)}` }
+          }
+        },
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: context => `${context.dataset.label}: LKR ${lkr.format(context.parsed.y)}`
+            }
+          }
+        }
+      }
+    });
+  }
+</script>
+{% endblock %}

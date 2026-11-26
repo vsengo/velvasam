@@ -83,7 +83,9 @@ class ContributionDistributionReportTests(TestCase):
         self.assertContains(response, 'id="containerMonthly"')
         self.assertContains(response, 'aria-label="Dashboard reports"')
         self.assertContains(response, 'Contribution &amp; Distribution')
-        self.assertContains(response, 'Annual Contribution')
+        self.assertContains(response, 'Annual Contribution &amp; Distribution')
+        self.assertContains(response, 'Contribution by Category')
+        self.assertContains(response, 'Expense by Category')
         self.assertContains(response, 'Beneficiaries Report')
         self.assertNotContains(response, 'Highcharts')
 
@@ -105,6 +107,45 @@ class ContributionDistributionReportTests(TestCase):
         self.assertEqual(response.context['chart_data']['contributions'], [100.0])
         self.assertEqual(response.context['chart_data']['distributions'], [40.0])
 
+    def test_annual_contribution_distribution_tab_sums_all_projects_in_lkr(self):
+        response = self.client.get(reverse('reports:annualContributionDistribution'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'annual_contribution_distribution.html')
+        self.assertEqual(response.context['chart_data']['labels'], [2024, 2025])
+        self.assertEqual(response.context['chart_data']['contributions'], [100.0, 60.0])
+        self.assertEqual(response.context['chart_data']['distributions'], [40.0, 0.0])
+        self.assertContains(response, 'Amounts are shown in LKR')
+        self.assertContains(response, 'class="nav-link active"')
+
+    def test_expense_by_category_uses_the_same_summary_as_first_tab_pie(self):
+        ReportByMonth.objects.create(
+            year=2024,
+            month='Jan',
+            exType='Distribution ',
+            amount=4000,
+        )
+        ReportByMonth.objects.create(
+            year=2024,
+            month='Jan',
+            exType='Contribution ',
+            amount=9000,
+        )
+
+        response = self.client.get(reverse('reports:expenseByCategory'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'expense_by_category.html')
+        self.assertEqual(response.context['chart_data'], {
+            'labels': ['Contribution', 'Distribution'],
+            'values': [9000.0, 4000.0],
+        })
+        self.assertContains(response, 'Expense totals by category for all years')
+        self.assertNotContains(response, 'Expense report by year')
+        self.assertNotContains(response, 'expense-by-category-all-years-chart')
+        self.assertContains(response, 'Amount</th>')
+        self.assertContains(response, 'class="nav-link active"')
+
 
 class AnnualContributionPageTests(TestCase):
     def test_annual_contribution_displays_a_chart_and_category_totals(self):
@@ -125,10 +166,46 @@ class AnnualContributionPageTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'annual_contribution.html')
+        self.assertEqual(response.context['selected_year'], 2025)
         self.assertEqual(
             response.context['chart_data'],
             {'labels': ['Monthly Contribution'], 'values': [200.0]},
         )
+
+    def test_annual_contribution_year_tabs_filter_category_totals(self):
+        ReportByMonth.objects.create(
+            year=2024,
+            month='Jan',
+            exType='Monthly Contribution',
+            amount=120,
+        )
+        ReportByMonth.objects.create(
+            year=2025,
+            month='Jan',
+            exType='Monthly Contribution',
+            amount=200,
+        )
+        ReportByMonth.objects.create(
+            year=2025,
+            month='Jan',
+            exType='Distribution',
+            amount=50,
+        )
+
+        response = self.client.get(
+            reverse('reports:annualContribution'),
+            {'year': 2024},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['years'], [2025, 2024])
+        self.assertEqual(response.context['selected_year'], 2024)
+        self.assertEqual(
+            response.context['chart_data'],
+            {'labels': ['Monthly Contribution'], 'values': [120.0]},
+        )
+        self.assertContains(response, 'href="?year=2025"')
+        self.assertContains(response, 'href="?year=2024"')
 
     def test_annual_contribution_amounts_use_comma_separators(self):
         ReportByMonth.objects.create(

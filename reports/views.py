@@ -9,6 +9,25 @@ from .models import ReportByMonth
 import datetime as dt
 import util.date as du
 
+
+def _yearly_contribution_distribution(transactions):
+    contribution_type = Q(exType__expense__icontains='Contribution')
+    yearly_totals = (
+        transactions.annotate(year=TruncYear('date'))
+        .values('year')
+        .annotate(
+            contribution=Sum('amountLocal', filter=contribution_type),
+            distribution=Sum('amountLocal', filter=~contribution_type),
+        )
+        .order_by('year')
+    )
+    return {
+        'labels': [row['year'].year for row in yearly_totals],
+        'contributions': [float(row['contribution'] or 0) for row in yearly_totals],
+        'distributions': [float(row['distribution'] or 0) for row in yearly_totals],
+    }
+
+
 def reportMonthly(request):
     projects = Project.objects.order_by('name')
     selected_project_id = request.GET.get('project', '')
@@ -26,20 +45,8 @@ def reportMonthly(request):
             raise Http404("Project not found")
         transactions = transactions.filter(project=selected_project)
 
-    contribution_type = Q(exType__expense__icontains='Contribution')
-    yearly_totals = (
-        transactions.annotate(year=TruncYear('date'))
-        .values('year')
-        .annotate(
-            contribution=Sum('amountLocal', filter=contribution_type),
-            distribution=Sum('amountLocal', filter=~contribution_type),
-        )
-        .order_by('year')
-    )
     chart_data = {
-        'labels': [row['year'].year for row in yearly_totals],
-        'contributions': [float(row['contribution'] or 0) for row in yearly_totals],
-        'distributions': [float(row['distribution'] or 0) for row in yearly_totals],
+        **_yearly_contribution_distribution(transactions),
         'title': (
             f"Contribution vs Distributions - {selected_project.name}"
             if selected_project
@@ -52,6 +59,15 @@ def reportMonthly(request):
         'selected_project': selected_project,
         'chart_data': chart_data,
     })
+
+
+def annualContributionDistribution(request):
+    chart_data = _yearly_contribution_distribution(Transaction.objects.all())
+    return render(request, 'annual_contribution_distribution.html', {
+        'chart_data': chart_data,
+    })
+
+
 def data_monthly(request):
     yy = dt.datetime.today().replace(day=1)
 
@@ -166,23 +182,64 @@ def data_monthlyAvg(request):
     return JsonResponse(chart)
 
 def annualContribution(request):
+    years = list(
+        ReportByMonth.objects.order_by()
+        .values_list('year', flat=True)
+        .distinct()
+        .order_by('-year')
+    )
+    selected_year = years[0] if years else None
+    requested_year = request.GET.get('year')
+    if requested_year:
+        try:
+            requested_year = int(requested_year)
+        except ValueError as exc:
+            raise Http404("Year not found") from exc
+        if requested_year not in years:
+            raise Http404("Year not found")
+        selected_year = requested_year
+
     totals = (
-        ReportByMonth.objects.values('exType')
+        ReportByMonth.objects.filter(year=selected_year).values('exType')
         .annotate(total=Sum('amount'))
         .order_by('exType')
-    )
+    ) if selected_year is not None else []
     categories = [
         {'name': row['exType'], 'amount': float(row['total'])}
         for row in totals
     ]
 
     return render(request, 'annual_contribution.html', {
+        'years': years,
+        'selected_year': selected_year,
         'categories': categories,
         'chart_data': {
             'labels': [category['name'] for category in categories],
             'values': [category['amount'] for category in categories],
         },
     })
+
+
+def expenseByCategory(request):
+    totals = (
+        ReportByMonth.objects.values('exType')
+        .annotate(total=Sum('amount'))
+        .order_by('exType')
+    )
+    categories = [
+        {'name': row['exType'].strip(), 'amount': float(row['total'] or 0)}
+        for row in totals
+    ]
+
+    return render(request, 'expense_by_category.html', {
+        'categories': categories,
+        'chart_data': {
+            'labels': [category['name'] for category in categories],
+            'values': [category['amount'] for category in categories],
+        },
+    })
+
+
 def beneficiariesReport(request):
     counts_by_category = {
         row['category']: row

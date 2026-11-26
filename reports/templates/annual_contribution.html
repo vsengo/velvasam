@@ -3,7 +3,21 @@
 {% block content %}
 {% include 'report_tabs.html' with active_tab='annualContribution' %}
 <main class="container py-4">
-  <h1 class="h2 mb-4">Annual Contribution by Category</h1>
+  <h1 class="h2 mb-4">Annual Contribution by Category{% if selected_year %} - {{ selected_year }}{% endif %}</h1>
+  {% if years %}
+  <nav aria-label="Annual contribution by year" class="mb-4">
+    <ul class="nav nav-tabs">
+      {% for year in years %}
+      <li class="nav-item">
+        <a
+          class="nav-link{% if year == selected_year %} active{% endif %}"
+          {% if year == selected_year %}aria-current="page"{% endif %}
+          href="?year={{ year }}">{{ year }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+  </nav>
+  {% endif %}
   {% if categories %}
   <div class="row g-4 align-items-center">
     <div class="col-12 col-lg-7">
