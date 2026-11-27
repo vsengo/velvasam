@@ -1,143 +1,99 @@
 {% extends 'home/base.html' %}
 {% load static %}
 {% block content %}
+{% include 'report_tabs.html' with active_tab='contributionDistribution' %}
+<section class="container-fluid py-3" aria-labelledby="contribution-distribution-title">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-3"
+    style="margin-inline: clamp(1rem, 3vw, 2rem);">
+    <div>
+      <h1 id="contribution-distribution-title" class="h3">Contribution vs Distributions</h1>
+      <p class="mb-0">Annual totals in LKR</p>
+    </div>
+    <form method="get" class="d-flex flex-column flex-sm-row align-items-sm-end gap-2">
+      <div>
+        <label for="project-filter" class="form-label">Project</label>
+        <select id="project-filter" name="project" class="form-select">
+          <option value="">All projects</option>
+          {% for project in projects %}
+          <option value="{{ project.pk }}" {% if selected_project.pk == project.pk %}selected{% endif %}>{{ project.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">Show report</button>
+    </form>
+  </div>
+  {% if chart_data.labels %}
+  <div class="contribution-distribution-chart-container">
+    <canvas id="contribution-distribution-chart" role="img" aria-label="Annual contribution and distribution totals in LKR"></canvas>
+  </div>
+  {% else %}
+  <p class="alert alert-info mb-0">No transaction data is available for this selection.</p>
+  {% endif %}
+</section>
+{{ chart_data|json_script:"contribution-distribution-data" }}
+<p id="chart-library-error" class="alert alert-danger" role="alert" hidden>
+  The chart library could not be loaded. Check your internet connection and reload this page.
+</p>
+<script
+  src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"
+  onerror="document.getElementById('chart-library-error').hidden = false;">
+</script>
+<script>
+  const reportData = JSON.parse(document.getElementById("contribution-distribution-data").textContent);
+  const lkr = new Intl.NumberFormat("en-LK", { maximumFractionDigits: 2 });
+  const chartElement = document.getElementById("contribution-distribution-chart");
+  if (chartElement && window.Chart) new Chart(chartElement, {
+    type: "bar",
+    data: {
+      labels: reportData.labels,
+      datasets: [
+        {
+          label: "Contribution",
+          data: reportData.contributions,
+          backgroundColor: "rgba(25, 135, 84, 0.75)"
+        },
+        {
+          label: "Distributions",
+          data: reportData.distributions,
+          backgroundColor: "rgba(220, 53, 69, 0.75)"
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: { display: true, text: reportData.title },
+        tooltip: {
+          callbacks: {
+            label: context => `${context.dataset.label}: LKR ${lkr.format(context.parsed.y)}`
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: "Amount (LKR)" },
+          ticks: { callback: value => `LKR ${lkr.format(value)}` }
+        }
+      }
+    }
+  });
+</script>
 <style>
-  /* Responsive chart container styles */
-  .chart-container {
-    height: 400px;
-    width: 100%;
-    margin-bottom: 1rem;
-    overflow: hidden;
-    flex-shrink: 0;
+  .contribution-distribution-chart-container {
+    height: min(60vh, 500px);
+    min-height: 300px;
+    width: auto;
+    margin-inline: clamp(1rem, 3vw, 2rem);
     position: relative;
-    display: flex;
-    flex-direction: column;
   }
 
-  /* Ensure rows don't grow */
-  .row {
-    align-items: stretch !important;
-  }
-
-  /* Ensure columns maintain container height */
-  .col-12, .col-sm-12, .col-md-6, .col-lg-4 {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .col-12 > .chart-container,
-  .col-sm-12 > .chart-container,
-  .col-md-6 > .chart-container,
-  .col-lg-4 > .chart-container {
-    height: 400px;
-    flex-grow: 0;
-  }
-
-  /* Mobile-first approach */
-  @media (max-width: 576px) {
-    .chart-container {
-      height: 300px;
-      margin-bottom: 0.75rem;
-    }
-    
-    .container {
-      padding-left: 0.5rem;
-      padding-right: 0.5rem;
-    }
-    
-    .row {
-      margin-left: -0.25rem;
-      margin-right: -0.25rem;
-    }
-    
-    .col-12 {
-      padding-left: 0.25rem;
-      padding-right: 0.25rem;
-    }
-  }
-
-  /* Tablet screens */
-  @media (min-width: 577px) and (max-width: 991px) {
-    .chart-container {
-      height: 350px;
-    }
-  }
-
-  /* Desktop screens */
-  @media (min-width: 992px) {
-    .chart-container {
-      height: 400px;
-    }
-  }
-
-  /* Ensure responsive behavior for Highcharts */
-  [id^="container"],
-  [id^="balance"],
-  [id^="risk"],
-  [id^="optbyacc"] {
-    width: 100%;
-    height: 100%;
+  .contribution-distribution-chart-container canvas {
+    display: block;
+    max-width: 100%;
   }
 </style>
-
-<div class="container-flid">
-  <div class="row g-2 g-md-3">
-    <div class="col-12 col-sm-12 col-md-6 col-lg-4">
-      <div id="containerMonthlyAvg"  data-url={% url 'reports:data_monthlyAvg' %}></div>
-    </div>
-    <div class="col-12 col-sm-12 col-md-6 col-lg-4">
-      <div id="containerMonthly"  data-url={% url 'reports:data_monthly' %}></div>
-    </div>
-  </div>
-</div>
-
-<script src="{% static 'js/Highcharts-12.5.0/code/highcharts.js' %}"></script>
-<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
- <script>
-    // Store chart instances for responsive redraw
-    var chartInstances = {};
-
-    // Function to load a chart
-    function loadChart(elementId) {
-      var $element = $("#" + elementId);
-      
-      if ($element.length === 0) {
-        return; // Element doesn't exist, skip
-      }
-
-      var url = $element.attr("data-url");
-      if (!url) {
-        return; // No URL, skip
-      }
-
-      $.ajax({
-        url: url,
-        dataType: 'json',
-        success: function (data) {
-          // Destroy existing chart if it exists
-          if (chartInstances[elementId]) {
-            chartInstances[elementId].destroy();
-          }
-          
-          // Force options to prevent vertical resizing
-          data.responsive = false;
-          data.chart = data.chart || {};
-          data.chart.height = 400;
-          
-          // Create new chart
-          chartInstances[elementId] = Highcharts.chart(elementId, data);
-        },
-        error: function (xhr, status, error) {
-          console.log("Error loading chart: " + elementId + " - " + error);
-        }
-      });
-    }
-// Load all charts
-$(document).ready(function() {
-  loadChart("containerMonthly");
-  loadChart("containerMonthlyAvg");
-})
-</script>
 
 {% include 'home/footer.html' %}
 {% endblock %}
